@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
+import { Providers } from '@/components/providers';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -16,7 +17,9 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body data-csp-nonce={nonce}>{children}</body>
+      <body data-csp-nonce={nonce}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

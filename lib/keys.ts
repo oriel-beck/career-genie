@@ -9,11 +9,17 @@ let wrappingKey: CryptoKey | undefined;
 let lastCompletedUse = 0;
 let idleTimer: ReturnType<typeof setTimeout> | undefined;
 
+export const LOCKED_KEY_MESSAGE = 'API key is locked';
+
 export class LockedKeyError extends Error {
   constructor() {
-    super('API key is locked');
+    super(LOCKED_KEY_MESSAGE);
     this.name = 'LockedKeyError';
   }
+}
+
+export function isLockedKeyMessage(message: string): boolean {
+  return message === LOCKED_KEY_MESSAGE || message.startsWith(`${LOCKED_KEY_MESSAGE} `);
 }
 
 function armIdleLock(): void {
