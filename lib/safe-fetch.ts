@@ -172,10 +172,32 @@ async function defaultResolve(hostname: string): Promise<string[]> {
   return (await lookup(hostname, { all: true, verbatim: true })).map(({ address }) => address);
 }
 
+/** Exported for tests — Node may call with `{ all: true }` or the legacy triple. */
+export function pinnedLookup(
+  address: string,
+  family: 4 | 6,
+): (
+  hostname: string,
+  options: { all?: boolean } | undefined,
+  callback: (...args: never[]) => void,
+) => void {
+  return (_hostname, options, callback) => {
+    const pinned = { address, family };
+    if (options?.all) {
+      (callback as (error: null, addresses: Array<{ address: string; family: number }>) => void)(
+        null,
+        [pinned],
+      );
+      return;
+    }
+    (callback as (error: null, address: string, family: number) => void)(null, address, family);
+  };
+}
+
 function defaultAgent(address: string, family: 4 | 6): PinnedAgent {
   return new Agent({
     connect: {
-      lookup: (_hostname, _options, callback) => callback(null, address, family),
+      lookup: pinnedLookup(address, family),
     },
   });
 }

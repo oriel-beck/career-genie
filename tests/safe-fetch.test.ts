@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   fetchPublicJob,
   JobContentType,
+  pinnedLookup,
   SafeFetchError,
   SafeFetchErrorKind,
   type SafeFetchDependencies,
@@ -135,6 +136,25 @@ test('pins the validated DNS address into its dispatcher', async () => {
   });
   assert.equal(result.body, '<main>Job</main>');
   assert.equal(dispatcher, agents[0]);
+});
+
+test('pinned lookup supports Node all:true and legacy callback shapes', () => {
+  const lookup = pinnedLookup('8.8.8.8', 4);
+  let allAddresses: unknown;
+  let legacyAddress: unknown;
+  let legacyFamily: unknown;
+  lookup('example.test', { all: true }, ((error: null, addresses: Array<{ address: string; family: number }>) => {
+    assert.equal(error, null);
+    allAddresses = addresses;
+  }) as (...args: never[]) => void);
+  lookup('example.test', {}, ((error: null, address: string, family: number) => {
+    assert.equal(error, null);
+    legacyAddress = address;
+    legacyFamily = family;
+  }) as (...args: never[]) => void);
+  assert.deepEqual(allAddresses, [{ address: '8.8.8.8', family: 4 }]);
+  assert.equal(legacyAddress, '8.8.8.8');
+  assert.equal(legacyFamily, 4);
 });
 
 test('maps an aborted upstream request to timeout', async () => {
