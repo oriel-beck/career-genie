@@ -1,0 +1,82 @@
+{
+  "id": 1,
+  "basics": {
+    "fullName": "Alex Rivera",
+    "email": "alex@example.com",
+    "phone": "+1-555-0100",
+    "location": "Austin, TX",
+    "links": [
+      { "id": "link-1", "label": "GitHub", "url": "https://github.com/example" }
+    ]
+  },
+  "headline": {
+    "id": "headline-1",
+    "text": "Senior platform engineer"
+  },
+  "summary": {
+    "id": "summary-1",
+    "text": "Builds reliable delivery platforms with strong observability."
+  },
+  "roles": [
+    {
+      "id": "role-1",
+      "company": "Northwind Labs",
+      "title": "Senior Platform Engineer",
+      "location": "Austin, TX",
+      "startDate": "2021-03",
+      "current": true,
+      "bullets": [
+        {
+          "id": "bullet-1",
+          "text": "Led migration of CI workloads onto managed container orchestration."
+        },
+        {
+          "id": "bullet-2",
+          "text": "Reduced deploy lead time by automating environment provisioning."
+        }
+      ]
+    }
+  ],
+  "education": [
+    {
+      "id": "edu-1",
+      "institution": "State University",
+      "qualification": "B.S.",
+      "field": "Computer Science",
+      "startDate": "2012-08",
+      "endDate": "2016-05",
+      "details": [
+        { "id": "edu-detail-1", "text": "Focus on distributed systems" }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "name": "Fleetboard",
+      "url": "https://example.com/fleetboard",
+      "description": {
+        "id": "proj-desc-1",
+        "text": "Internal status board for service ownership."
+      },
+      "bullets": [
+        {
+          "id": "proj-bullet-1",
+          "text": "Implemented live incident timeline from existing telemetry."
+        }
+      ]
+    }
+  ],
+  "skills": [
+    { "id": "skill-1", "text": "TypeScript" },
+    { "id": "skill-2", "text": "Docker" },
+    { "id": "skill-3", "text": "Terraform" }
+  ],
+  "certifications": [
+    { "id": "cert-1", "text": "AWS Solutions Architect Associate" }
+  ],
+  "languages": [
+    { "id": "lang-1", "text": "English" }
+  ],
+  "updatedAt": 1700000000000
+}

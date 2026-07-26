@@ -1,0 +1,10 @@
+Senior Platform Engineer — Contoso Cloud
+
+We need someone who has production Kubernetes experience at scale.
+Requirements:
+- Designed and operated Kubernetes clusters in production
+- Helm chart authoring and GitOps delivery
+- Deep Linux networking and CNI troubleshooting
+- Mentored engineers on container orchestration best practices
+
+Keywords: Kubernetes, Helm, GitOps, CNI, SRE
