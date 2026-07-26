@@ -177,9 +177,9 @@ test('creates, filters, versions, and downloads a tailored job', async ({ page }
   await expect(page.getByText('Status saved.')).toBeVisible();
   await page.getByRole('button', { name: 'Generate' }).click();
   await expect(page.getByText('New AI version saved.')).toBeVisible();
-  await page.getByLabel('Summary').fill('Edited platform engineer summary');
   await page.getByRole('button', { name: 'Regenerate' }).click();
   await expect(page.getByRole('button', { name: /v2 · ai/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open in new tab' })).toHaveCount(2);
   await page.getByRole('button', { name: 'Download resume PDF' }).click();
   await expect(
     page.getByRole('button', { name: 'Download cover letter PDF' }),

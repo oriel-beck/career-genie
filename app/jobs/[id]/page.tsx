@@ -36,7 +36,6 @@ export default function JobPage() {
   const [profile, setProfile] = useState<Profile>();
   const [versions, setVersions] = useState<Generation[]>([]);
   const [active, setActive] = useState<Generation>();
-  const [working, setWorking] = useState<Generation>();
   const [extraContext, setExtraContext] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -46,38 +45,12 @@ export default function JobPage() {
     ]);
     savedVersions.sort((a, b) => b.version - a.version);
     setJob(savedJob); setProfile(savedProfile); setVersions(savedVersions);
-    if (!active && savedVersions[0]) { setActive(savedVersions[0]); setWorking(structuredClone(savedVersions[0])); }
+    if (!active && savedVersions[0]) setActive(savedVersions[0]);
   }
   useEffect(() => {
     const timer = window.setTimeout(() => { void refresh(); }, 0);
     return () => window.clearTimeout(timer);
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const dirty = Boolean(active && working && JSON.stringify(active) !== JSON.stringify(working));
-  useEffect(() => {
-    const beforeUnload = (event: BeforeUnloadEvent) => { if (dirty) { event.preventDefault(); event.returnValue = ''; } };
-    const confirmLink = (event: MouseEvent) => {
-      if (!dirty) return;
-      const target = event.target instanceof Element ? event.target.closest('a[href]') : null;
-      if (!target) return;
-      const href = target.getAttribute('href');
-      if (!href || href.startsWith('#')) return;
-      event.preventDefault();
-      event.stopPropagation();
-      void (async () => {
-        const ok = await confirm({
-          title: 'Discard unsaved edits?',
-          message: 'You have unsaved generation edits. Leave this page and discard them?',
-          confirmLabel: 'Discard',
-          danger: true,
-        });
-        if (ok) router.push(href);
-      })();
-    };
-    window.addEventListener('beforeunload', beforeUnload);
-    document.addEventListener('click', confirmLink, true);
-    return () => { window.removeEventListener('beforeunload', beforeUnload); document.removeEventListener('click', confirmLink, true); };
-  }, [dirty, confirm, router]);
 
   async function updateStatus(value: Job['status']) {
     if (!job) return;
@@ -100,17 +73,8 @@ export default function JobPage() {
     toast('Job deleted.', 'info');
     router.push('/dashboard');
   }
-  async function selectVersion(version: Generation) {
-    if (dirty) {
-      const ok = await confirm({
-        title: 'Discard unsaved edits?',
-        message: 'Switching versions discards unsaved generation edits.',
-        confirmLabel: 'Discard',
-        danger: true,
-      });
-      if (!ok) return;
-    }
-    setActive(version); setWorking(structuredClone(version));
+  function selectVersion(version: Generation) {
+    setActive(version);
   }
   async function saveVersion(origin: Generation['origin'], value: Pick<Generation, 'resume' | 'coverLetter' | 'changeSummary'>, modelUsed: string, parentId?: string, context?: string) {
     if (!job) return;
@@ -121,7 +85,7 @@ export default function JobPage() {
       await db.generations.add(saved);
     });
     setVersions((prior) => [saved, ...prior]);
-    setActive(saved); setWorking(structuredClone(saved));
+    setActive(saved);
     return saved;
   }
   async function generate() {
@@ -142,11 +106,6 @@ export default function JobPage() {
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Generation failed. No version was saved.', 'error');
     } finally { setBusy(false); }
-  }
-  async function saveEdits() {
-    if (!working || !active) return;
-    await saveVersion(GenerationOrigin.Manual, working, working.modelUsed, active.id, working.extraContext);
-    toast('Edits saved as a new version.', 'success');
   }
 
   if (!job) return <AppShell><section className="page stack"><h1>Job not found</h1><Link href="/dashboard">Return to jobs</Link></section></AppShell>;
@@ -179,7 +138,7 @@ export default function JobPage() {
         </>
       )}
     </section>
-    {versions.length > 0 && <section className="card stack"><h2>Versions</h2><div className="button-row">{versions.map((item) => <button className="secondary" type="button" key={item.id} onClick={() => void selectVersion(item)} aria-pressed={active?.id === item.id}>v{item.version} · {item.origin}</button>)}</div></section>}
-    {working && <GenerationEditor generation={working} onChange={setWorking} onSave={() => void saveEdits()} />}
+    {versions.length > 0 && <section className="card stack"><h2>Versions</h2><div className="button-row">{versions.map((item) => <button className="secondary" type="button" key={item.id} onClick={() => selectVersion(item)} aria-pressed={active?.id === item.id}>v{item.version} · {item.origin}</button>)}</div></section>}
+    {active && <GenerationEditor generation={active} />}
   </section></AppShell>;
 }

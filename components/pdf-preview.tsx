@@ -43,5 +43,12 @@ export function PdfPreview({ document, title }: { document: ReactElement<Documen
     );
   }
 
-  return <iframe className="pdf-preview-frame" src={url} title={title} />;
+  return (
+    <div className="pdf-preview-body">
+      <a className="button-link secondary" href={url} target="_blank" rel="noreferrer">
+        Open in new tab
+      </a>
+      <iframe className="pdf-preview-frame" src={url} title={title} />
+    </div>
+  );
 }
