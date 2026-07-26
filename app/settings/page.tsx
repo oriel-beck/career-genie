@@ -132,7 +132,7 @@ export default function SettingsPage() {
       {settings.keyHint ? (
         <>
           <p>Storage: {settings.keyStorage}. Saved key: ••••{settings.keyHint}.</p>
-          <div className="button-row"><button type="button" onClick={() => { lock(); toast('Key locked.', 'info'); }}>Lock key</button><button type="button" onClick={loadModels}>Load live model catalog</button></div>
+          <div className="button-row"><button type="button" onClick={() => { lock(); toast('Key locked.', 'info'); }}>Lock key</button></div>
           {settings.keyStorage === KeyStorageMode.Encrypted && settings.encryptedKey && (
             <UnlockKeyForm id="unlock-passphrase" onUnlocked={() => toast('Key unlocked.', 'success')} />
           )}
@@ -164,7 +164,15 @@ export default function SettingsPage() {
         )}
         <button>Validate and save key</button></form>
     </section>
-    <section className="card stack"><h2>Model choices</h2>{models.length ? <ModelPicker models={models} selected={settings?.models ?? {}} onChange={changeModels} /> : <p>Load the live model catalog after unlocking your key.</p>}</section>
+    <section className="card stack">
+      <h2>Model choices</h2>
+      <button type="button" onClick={() => void loadModels()}>Load live model catalog</button>
+      {models.length ? (
+        <ModelPicker models={models} selected={settings?.models ?? {}} onChange={changeModels} />
+      ) : (
+        <p>Load the live model catalog. If your key is locked, you will be asked to unlock it.</p>
+      )}
+    </section>
     <section className="card stack"><h2>Storage and folder</h2><p>Using {estimate?.usage ?? 0} of {estimate?.quota ?? 0} bytes.</p><button type="button" onClick={chooseFolder}>Choose download folder</button><p>{settings?.folderHandle ? `Selected folder: ${settings.folderHandle.name}` : 'No folder selected; files download normally.'}</p></section>
     <section className="card stack">
       <h2>Backup</h2>
