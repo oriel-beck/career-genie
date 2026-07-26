@@ -13,7 +13,8 @@ const DESIRED_MAX_TOKENS: Record<CallKind, number> = {
   [CallKind.Parse]: 4_096,
   [CallKind.Interview]: 4_096,
   [CallKind.Analyze]: 4_096,
-  [CallKind.Tailor]: 8_192,
+  // Nested resumeJson/coverLetterJson strings are token-heavy; 8k truncates rich profiles.
+  [CallKind.Tailor]: 16_384,
 };
 
 const DESIRED_EFFORT: Record<CallKind, Effort> = {

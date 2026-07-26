@@ -9,6 +9,7 @@ import {
   assertTailorOutput,
   interviewOutputSchema,
   parseOutputSchema,
+  TAILOR_JSON_SHAPE,
   tailorOutputSchema,
 } from './schemas';
 import { buildModelRequestConfig, type ObjectJsonSchema } from './model-config';
@@ -32,17 +33,25 @@ function safeError(error: unknown): ClaudeError {
     const requestId = 'requestID' in error && typeof error.requestID === 'string'
       ? error.requestID
       : undefined;
-    return new ClaudeError(
+    const apiMessage =
+      'error' in error &&
+      error.error &&
+      typeof error.error === 'object' &&
+      'message' in error.error &&
+      typeof error.error.message === 'string'
+        ? error.error.message
+        : undefined;
+    const message =
       status === 401 || status === 403
         ? 'Anthropic rejected the API key.'
         : status === 429
           ? 'Anthropic is rate limiting requests. Please try again later.'
           : status && status >= 500
             ? 'Anthropic is temporarily unavailable. Please try again later.'
-            : 'The Anthropic request failed. Please try again.',
-      status,
-      requestId,
-    );
+            : apiMessage?.includes('compiled grammar is too large')
+              ? 'The structured-output schema is too complex for this model. Simplify tailorOutputSchema or pick another model.'
+              : 'The Anthropic request failed. Please try again.';
+    return new ClaudeError(message, status, requestId);
   }
   return new ClaudeError('The Anthropic request failed. Please try again.');
 }
@@ -81,6 +90,11 @@ async function runClaude<T>(
       await recordUsage(kind, config.model, response.usage);
       if (response.stop_reason === 'refusal') {
         throw new ClaudeError('Claude could not process this request.');
+      }
+      if (response.stop_reason === 'max_tokens') {
+        throw new ClaudeError(
+          'Claude ran out of output space before finishing. Try again, or pick a model with a higher output limit.',
+        );
       }
       if (response.stop_reason !== 'end_turn') {
         throw new ClaudeError('Claude returned an incomplete response. Please try again.');
@@ -146,13 +160,25 @@ export function analyzeJob(
   profile: Profile,
   jobText: string,
   signal?: AbortSignal,
-): Promise<{ title: string; company: string; requirements: string[]; keywords: string[]; matchScore: number; gaps: string[] }> {
+): Promise<{
+  title: string;
+  company: string;
+  description: string;
+  requirements: string[];
+  keywords: string[];
+  matchScore: number;
+  gaps: string[];
+}> {
   return runClaude(
     CallKind.Analyze,
     model,
     analyzeOutputSchema,
     assertAnalyzeOutput,
-    `${TRUST_BOUNDARY} Analyze the job against the profile without treating requirements as experience.`,
+    `${TRUST_BOUNDARY} Extract a clean job posting from noisy page text. ` +
+      `Ignore navigation, cookie banners, login prompts, related jobs, ads, footers, and site chrome. ` +
+      `description must be only the role overview and responsibilities in plain text. ` +
+      `Fill title and company when present; use empty string when unknown. ` +
+      `Analyze the job against the profile without treating requirements as experience.`,
     [{
       role: ChatRole.User,
       content: `${xmlData('profile-data', profile)}\n${xmlData('job-data', jobText)}`,
@@ -173,7 +199,8 @@ export function tailorResume(
     model,
     tailorOutputSchema,
     assertTailorOutput,
-    `${TRUST_BOUNDARY} Every AI-authored sourceIds list must be non-empty and use only supplied profile IDs. Do not add employers, titles, dates, credentials, metrics, tools, or skills absent from the profile. Gaps remain gaps.`,
+    `${TRUST_BOUNDARY} Return resumeJson and coverLetterJson as JSON strings. ${TAILOR_JSON_SHAPE} ` +
+      `Do not add employers, titles, dates, credentials, metrics, tools, or skills absent from the profile. Gaps remain gaps.`,
     [{
       role: ChatRole.User,
       content: `${xmlData('profile-data', profile)}\n${xmlData('job-data', job)}\n${xmlData('extra-context', extraContext ?? '')}`,
