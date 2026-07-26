@@ -70,12 +70,8 @@ test('encrypted key validation persists ciphertext and starts locked after reloa
   await page.getByLabel('Encryption passphrase').fill('correct horse battery staple');
   await page.getByRole('button', { name: 'Validate key' }).press('Enter');
   await expect(
-    page.getByText('Key validated. Select models compatible with each task.'),
+    page.getByText('Key validated. Models defaulted for each task — change any before saving.'),
   ).toBeVisible();
-  for (const trigger of await page.locator('.model-picker .select-trigger').all()) {
-    await trigger.click();
-    await page.getByRole('option', { name: model.display_name }).click();
-  }
   await page.getByRole('button', { name: 'Save key and models' }).click();
   await expect(
     page.getByText('Key and models saved. Upload your resume next.'),

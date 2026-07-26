@@ -8,10 +8,11 @@ import { ModelPicker } from '@/components/model-picker';
 import { UnlockKeyForm } from '@/components/unlock-key-form';
 import { backupJson, importBackup } from '@/lib/backup';
 import { db } from '@/lib/db';
-import { commitStagedKey, lock, stageKey } from '@/lib/keys';
+import { commitStagedKey, defaultSettings, lock, stageKey } from '@/lib/keys';
+import { defaultModelChoices } from '@/lib/model-config';
 import { listModels } from '@/lib/models';
 import { storageEstimate } from '@/lib/storage';
-import { KeyStorageMode, type CallKind as CallKindValue, type ModelInfo, type Settings, type UsageRecord } from '@/lib/types';
+import { CallKind, KeyStorageMode, type CallKind as CallKindValue, type ModelInfo, type Settings, type UsageRecord } from '@/lib/types';
 
 function download(name: string, content: string) {
   const url = URL.createObjectURL(new Blob([content], { type: 'application/json' }));
@@ -22,7 +23,7 @@ function download(name: string, content: string) {
 
 export default function SettingsPage() {
   const { toast, confirm } = useFeedback();
-  const [settings, setSettings] = useState<Settings>();
+  const [settings, setSettings] = useState<Settings>(() => defaultSettings());
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [passphrase, setPassphrase] = useState('');
   const [newKey, setNewKey] = useState('');
@@ -33,17 +34,29 @@ export default function SettingsPage() {
 
   async function refresh() {
     const [saved, size, records] = await Promise.all([db.settings.get(1), storageEstimate(), db.usage.toArray()]);
-    setSettings(saved); setEstimate(size); setUsage(records);
+    setSettings(saved ?? defaultSettings()); setEstimate(size); setUsage(records);
   }
   useEffect(() => {
     void Promise.all([db.settings.get(1), storageEstimate(), db.usage.toArray()]).then(([saved, size, records]) => {
-      setSettings(saved); setEstimate(size); setUsage(records);
+      setSettings(saved ?? defaultSettings()); setEstimate(size); setUsage(records);
     });
   }, []);
 
   async function loadModels() {
-    try { setModels(await listModels()); toast('Live model catalog loaded.', 'success'); }
-    catch (error) {
+    try {
+      const catalog = await listModels();
+      setModels(catalog);
+      const models = defaultModelChoices(catalog, settings.models);
+      const changed = Object.values(CallKind).some((kind) => models[kind] !== settings.models[kind]);
+      if (changed) {
+        const next = { ...settings, models, updatedAt: Date.now() };
+        await db.settings.put(next);
+        setSettings(next);
+        toast('Live model catalog loaded. Missing or invalid models were defaulted for each task.', 'success');
+      } else {
+        toast('Live model catalog loaded.', 'success');
+      }
+    } catch (error) {
       toast(error instanceof Error ? error.message : 'Unlock or validate your key before loading models.', 'error');
     }
   }
@@ -116,12 +129,16 @@ export default function SettingsPage() {
   return <AppShell><section className="page stack">
     <h1>Settings</h1>
     <section className="card stack"><h2>Key</h2>
-      <p>Storage: {settings?.keyStorage ?? KeyStorageMode.Encrypted}. Saved key: {settings?.keyHint ? `••••${settings.keyHint}` : 'none'}.</p>
-      <div className="button-row"><button type="button" onClick={() => { lock(); toast('Key locked.', 'info'); }}>Lock key</button><button type="button" onClick={loadModels}>Load live model catalog</button></div>
-      {settings?.keyStorage === KeyStorageMode.Encrypted && (
-        <UnlockKeyForm id="unlock-passphrase" onUnlocked={() => toast('Key unlocked.', 'success')} />
-      )}
-      <form className="stack" onSubmit={changeKey}><h3>Change key or storage mode</h3>
+      {settings.keyHint ? (
+        <>
+          <p>Storage: {settings.keyStorage}. Saved key: ••••{settings.keyHint}.</p>
+          <div className="button-row"><button type="button" onClick={() => { lock(); toast('Key locked.', 'info'); }}>Lock key</button><button type="button" onClick={loadModels}>Load live model catalog</button></div>
+          {settings.keyStorage === KeyStorageMode.Encrypted && settings.encryptedKey && (
+            <UnlockKeyForm id="unlock-passphrase" onUnlocked={() => toast('Key unlocked.', 'success')} />
+          )}
+        </>
+      ) : null}
+      <form className="stack" onSubmit={changeKey}><h3>{settings.keyHint ? 'Change key or storage mode' : 'Add key'}</h3>
         <fieldset>
           <legend>Storage mode</legend>
           {Object.values(KeyStorageMode).map((mode) => (
@@ -131,7 +148,6 @@ export default function SettingsPage() {
               value={mode}
               checked={settings?.keyStorage === mode}
               onChange={() => {
-                if (!settings) return;
                 setSettings({ ...settings, keyStorage: mode, updatedAt: Date.now() });
               }}
             >
@@ -139,7 +155,7 @@ export default function SettingsPage() {
             </RadioOption>
           ))}
         </fieldset>
-        <label htmlFor="replacement-key">Replacement Anthropic API key<input id="replacement-key" type="password" value={newKey} onChange={(event) => setNewKey(event.target.value)} required /></label>
+        <label htmlFor="replacement-key">{settings.keyHint ? 'Replacement Anthropic API key' : 'Anthropic API key'}<input id="replacement-key" type="password" value={newKey} onChange={(event) => setNewKey(event.target.value)} required /></label>
         {settings?.keyStorage === KeyStorageMode.Encrypted && <label htmlFor="new-passphrase">Passphrase<input id="new-passphrase" type="password" value={passphrase} onChange={(event) => setPassphrase(event.target.value)} minLength={12} required /></label>}
         {settings?.keyStorage === KeyStorageMode.Plaintext && (
           <CheckboxOption checked={plainConfirmed} onChange={setPlainConfirmed}>

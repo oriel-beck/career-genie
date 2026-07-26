@@ -355,7 +355,7 @@ The ordered flow is:
 
 1. Choose key storage mode; encrypted is preselected.
 2. Enter and validate the key by fetching the model catalog.
-3. Select a compatible model for each call kind. Offer “use this model where compatible,” but never guess a default.
+3. Select a compatible model for each call kind. After the live catalog loads, default each unset or unusable selection to the best-fit family from that catalog (Haiku for parse extraction; Sonnet for interview/analyze/tailor; newest usable ID within the family). The user can change any default before saving.
 4. Upload a PDF or DOCX, maximum 10 MiB. Reject MIME/extension mismatch, invalid magic bytes, and empty or oversized DOCX extraction.
 5. Parse to a proposed profile, show the full editable profile, and save only after confirmation.
 6. Run the gap interview. Each answer produces an assistant reply plus a proposed complete profile. Show a field-level diff; Approve saves it, Edit opens it in the profile editor, Reject discards it. Persist a pending proposal so reload does not lose it.
@@ -682,7 +682,7 @@ Do not add these to v1:
 - automatic applications, email, calendars, reminders, notifications, analytics, or telemetry;
 - multiple resume templates, custom fonts, photos, columns, themes, or drag-and-drop layout;
 - real-time streaming, tools, batches, Files API uploads, prompt caching policy, or extended thinking;
-- model recommendations based on price, hardcoded model IDs, or locally maintained pricing;
+- model recommendations based on price, hardcoded model IDs, or locally maintained pricing (catalog family heuristics without prices are allowed for defaults);
 - automatic retries, background calls, scheduled calls, or calls without an explicit user action;
 - semantic claims that provenance IDs prove truth; the user remains the final reviewer;
 - merge-style backup import, PDF blobs in backup, or original resume retention;

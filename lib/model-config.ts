@@ -1,4 +1,4 @@
-import { CallKind, Effort, type ModelInfo } from './types';
+import { CallKind, Effort, type ModelChoice, type ModelInfo } from './types';
 
 export type ObjectJsonSchema = Record<string, unknown> & { type: 'object' };
 
@@ -32,6 +32,27 @@ const EFFORT_ORDER: Effort[] = [
   Effort.Max,
 ];
 
+/** Live-catalog family preference per task (no hardcoded model IDs). */
+const ModelFamily = {
+  Haiku: 'haiku',
+  Sonnet: 'sonnet',
+  Opus: 'opus',
+  Fable: 'fable',
+  Other: 'other',
+} as const;
+type ModelFamily = (typeof ModelFamily)[keyof typeof ModelFamily];
+
+const PREFERRED_FAMILIES: Record<CallKind, readonly ModelFamily[]> = {
+  // Structured PDF/DOCX extraction — Haiku is built for fast extraction.
+  [CallKind.Parse]: [ModelFamily.Haiku, ModelFamily.Sonnet, ModelFamily.Opus, ModelFamily.Fable],
+  // Conversational gap-filling — Sonnet for dialogue quality at medium effort.
+  [CallKind.Interview]: [ModelFamily.Sonnet, ModelFamily.Opus, ModelFamily.Fable, ModelFamily.Haiku],
+  // Noisy page cleanup + match judgment — Sonnet; Haiku is a solid extraction fallback.
+  [CallKind.Analyze]: [ModelFamily.Sonnet, ModelFamily.Haiku, ModelFamily.Opus, ModelFamily.Fable],
+  // Grounded resume/cover rewrite — Sonnet is the production writing default; Opus if absent.
+  [CallKind.Tailor]: [ModelFamily.Sonnet, ModelFamily.Opus, ModelFamily.Fable, ModelFamily.Haiku],
+};
+
 export function isModelUsable(model: ModelInfo, kind: CallKind): boolean {
   if (model.capabilities.structured_outputs?.supported !== true) return false;
   if (!(model.max_tokens > 0)) return false;
@@ -48,6 +69,73 @@ export function resolveEffort(model: ModelInfo, desired: Effort): Effort | undef
     if (capability[candidate]?.supported === true) return candidate;
   }
   return undefined;
+}
+
+function detectFamily(model: ModelInfo): ModelFamily {
+  const text = `${model.id} ${model.display_name}`.toLowerCase();
+  if (text.includes('haiku')) return ModelFamily.Haiku;
+  if (text.includes('sonnet')) return ModelFamily.Sonnet;
+  if (text.includes('opus')) return ModelFamily.Opus;
+  if (text.includes('fable') || text.includes('mythos')) return ModelFamily.Fable;
+  return ModelFamily.Other;
+}
+
+function versionParts(id: string): number[] {
+  return id.match(/\d+/g)?.map(Number) ?? [];
+}
+
+function compareVersionDesc(a: string, b: string): number {
+  const left = versionParts(a);
+  const right = versionParts(b);
+  const length = Math.max(left.length, right.length);
+  for (let index = 0; index < length; index += 1) {
+    const delta = (right[index] ?? 0) - (left[index] ?? 0);
+    if (delta) return delta;
+  }
+  return a.length - b.length;
+}
+
+function rankForKind(kind: CallKind, a: ModelInfo, b: ModelInfo): number {
+  const desired = DESIRED_EFFORT[kind];
+  const effortScore = (model: ModelInfo) => (resolveEffort(model, desired) === desired ? 1 : 0);
+  const effortDelta = effortScore(b) - effortScore(a);
+  if (effortDelta) return effortDelta;
+  const tokenDelta =
+    Math.min(b.max_tokens, DESIRED_MAX_TOKENS[kind]) - Math.min(a.max_tokens, DESIRED_MAX_TOKENS[kind]);
+  if (tokenDelta) return tokenDelta;
+  return compareVersionDesc(a.id, b.id);
+}
+
+export function pickDefaultModel(models: ModelInfo[], kind: CallKind): string | undefined {
+  const usable = models.filter((model) => isModelUsable(model, kind));
+  if (!usable.length) return undefined;
+
+  for (const family of PREFERRED_FAMILIES[kind]) {
+    const inFamily = usable.filter((model) => detectFamily(model) === family);
+    if (!inFamily.length) continue;
+    inFamily.sort((a, b) => rankForKind(kind, a, b));
+    return inFamily[0]!.id;
+  }
+
+  return [...usable].sort((a, b) => rankForKind(kind, a, b))[0]?.id;
+}
+
+/** Fill missing or unusable selections from the live catalog; keep valid user choices. */
+export function defaultModelChoices(
+  models: ModelInfo[],
+  current: Partial<ModelChoice> = {},
+): Partial<ModelChoice> {
+  const next: Partial<ModelChoice> = { ...current };
+  for (const kind of Object.values(CallKind)) {
+    const existing = current[kind];
+    const stillValid =
+      !!existing && models.some((model) => model.id === existing && isModelUsable(model, kind));
+    if (stillValid) continue;
+    const picked = pickDefaultModel(models, kind);
+    if (picked) next[kind] = picked;
+    else delete next[kind];
+  }
+  return next;
 }
 
 export function buildModelRequestConfig<S extends ObjectJsonSchema>(

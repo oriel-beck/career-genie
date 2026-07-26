@@ -10,6 +10,7 @@ import { ModelPicker } from '@/components/model-picker';
 import { ProfileEditor } from '@/components/profile-editor';
 import { db } from '@/lib/db';
 import { stageKey, commitStagedKey } from '@/lib/keys';
+import { defaultModelChoices } from '@/lib/model-config';
 import { listModels } from '@/lib/models';
 import { parseResume } from '@/lib/parse-resume';
 import { persistStorage } from '@/lib/storage';
@@ -76,15 +77,15 @@ export default function OnboardingPage() {
         db.settings.get(1),
       ]);
       if (savedProfile) setProfile(savedProfile);
-      if (savedSettings) {
-        setMode(savedSettings.keyStorage);
-        setSelected(savedSettings.models);
-      }
+      if (savedSettings) setMode(savedSettings.keyStorage);
       // Reload the live catalog when a key is already unlocked so the interview
       // can ask its first question without re-validating.
       try {
-        setModels(await listModels());
+        const catalog = await listModels();
+        setModels(catalog);
+        setSelected(defaultModelChoices(catalog, savedSettings?.models ?? {}));
       } catch {
+        if (savedSettings) setSelected(savedSettings.models);
         /* locked or missing key — user can validate again */
       }
     })();
@@ -97,7 +98,8 @@ export default function OnboardingPage() {
       stageKey(key);
       const catalog = await listModels();
       setModels(catalog);
-      toast('Key validated. Select models compatible with each task.', 'success');
+      setSelected((prev) => defaultModelChoices(catalog, prev));
+      toast('Key validated. Models defaulted for each task — change any before saving.', 'success');
     } catch {
       toast('Could not validate the key. Check it and try again.', 'error');
     } finally {

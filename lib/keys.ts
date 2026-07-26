@@ -36,13 +36,17 @@ function keyHint(key: string): string {
   return key.slice(-4);
 }
 
-async function currentSettings(): Promise<Settings> {
-  return (await db.settings.get(1)) ?? {
+export function defaultSettings(): Settings {
+  return {
     id: 1,
     keyStorage: KeyStorageMode.Encrypted,
     models: {},
     updatedAt: Date.now(),
   };
+}
+
+async function currentSettings(): Promise<Settings> {
+  return (await db.settings.get(1)) ?? defaultSettings();
 }
 
 export function stageKey(key: string): void {

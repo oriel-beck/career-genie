@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   buildModelRequestConfig,
+  defaultModelChoices,
   isModelUsable,
+  pickDefaultModel,
   resolveEffort,
 } from '../lib/model-config';
 import { CallKind, Effort, type ModelInfo } from '../lib/types';
@@ -115,4 +117,39 @@ test('omits effort when capability is absent', () => {
   assert.equal(resolveEffort(withoutEffort, Effort.High), undefined);
   const config = buildModelRequestConfig(CallKind.Analyze, withoutEffort, schema);
   assert.equal('effort' in config, false);
+});
+
+test('defaults pick task-fit families from the live catalog', () => {
+  const catalog = [
+    model({ id: 'claude-haiku-4-5', display_name: 'Claude Haiku 4.5', max_tokens: 64_000 }),
+    model({ id: 'claude-sonnet-5', display_name: 'Claude Sonnet 5', max_tokens: 128_000 }),
+    model({ id: 'claude-opus-5', display_name: 'Claude Opus 5', max_tokens: 128_000 }),
+    model({ id: 'claude-sonnet-4-6', display_name: 'Claude Sonnet 4.6', max_tokens: 128_000 }),
+  ];
+  assert.equal(pickDefaultModel(catalog, CallKind.Parse), 'claude-haiku-4-5');
+  assert.equal(pickDefaultModel(catalog, CallKind.Analyze), 'claude-sonnet-5');
+  assert.equal(pickDefaultModel(catalog, CallKind.Interview), 'claude-sonnet-5');
+  assert.equal(pickDefaultModel(catalog, CallKind.Tailor), 'claude-sonnet-5');
+});
+
+test('defaultModelChoices keeps valid selections and replaces unusable ones', () => {
+  const catalog = [
+    model({ id: 'claude-haiku-4-5', display_name: 'Claude Haiku 4.5' }),
+    model({
+      id: 'claude-sonnet-5',
+      display_name: 'Claude Sonnet 5',
+      capabilities: {
+        structured_outputs: { supported: true },
+        pdf_input: { supported: false },
+      },
+    }),
+  ];
+  const choices = defaultModelChoices(catalog, {
+    parse: 'missing-model',
+    interview: 'claude-sonnet-5',
+  });
+  assert.equal(choices.parse, 'claude-haiku-4-5');
+  assert.equal(choices.interview, 'claude-sonnet-5');
+  assert.equal(choices.analyze, 'claude-sonnet-5');
+  assert.equal(choices.tailor, 'claude-sonnet-5');
 });
