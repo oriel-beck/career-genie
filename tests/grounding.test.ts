@@ -145,24 +145,38 @@ test('job extraction returns collapsed plain text and never markup', () => {
   const previous = globalThis.DOMParser;
   globalThis.DOMParser = class {
     parseFromString(html: string) {
+      const removed = new Set<unknown>();
       const title = html.match(/<title>(.*?)<\/title>/i)?.[1] ?? '';
-      const body = html
-        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-        .replace(/<[^>]+>/g, ' ');
+      const nodes = [
+        { selector: 'script', textContent: 'x()', remove() { removed.add(this); } },
+        { selector: 'nav', textContent: 'Careers Login', remove() { removed.add(this); } },
+      ];
+      const mainText = 'Engineer Build things';
       return {
-        querySelector: (selector: string) =>
-          selector === 'title' ? { textContent: title } : null,
-        body: { textContent: body },
+        querySelectorAll: (selector: string) =>
+          nodes.filter((node) => selector.split(',').some((part) => part.trim() === node.selector || part.includes(node.selector))),
+        querySelector: (selector: string) => {
+          if (selector === 'title') return { textContent: title };
+          if (selector.includes('main')) return { textContent: mainText };
+          return null;
+        },
+        body: {
+          get textContent() {
+            const scriptsGone = ![...removed].some((node) => (node as { selector: string }).selector === 'script');
+            return scriptsGone ? mainText : `x() ${mainText}`;
+          },
+        },
       };
     }
   } as unknown as typeof DOMParser;
   try {
     const text = extractJobText(
-      '<html><title>Role</title><body><h1>Engineer</h1><script>x()</script><p>Build things</p></body></html>',
+      '<html><title>Role</title><body><nav>Careers Login</nav><main><h1>Engineer</h1><script>x()</script><p>Build things</p></main></body></html>',
       'text/html',
     );
     assert.equal(text.includes('<'), false);
     assert.equal(text.includes('x()'), false);
+    assert.equal(text.includes('Login'), false);
     assert.match(text, /Role/);
     assert.match(text, /Engineer/);
     assert.match(text, /Build things/);

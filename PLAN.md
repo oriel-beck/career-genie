@@ -291,7 +291,7 @@ Every selected model must have `structured_outputs.supported === true`. The PDF 
 |---|---|---:|---|
 | `parse` | profile fields without IDs or timestamps | 4,096 | `low` |
 | `interview` | `{ reply, proposedProfile, changes, complete }` | 4,096 | `medium` |
-| `analyze` | `{ title, company, requirements, keywords, matchScore, gaps }` | 4,096 | `low` |
+| `analyze` | `{ title, company, description, requirements, keywords, matchScore, gaps }` | 4,096 | `low` |
 | `tailor` | `{ resume, coverLetter, changeSummary }` | 8,192 | `high` |
 
 Set `max_tokens` to the lower of the table value and the positive `model.max_tokens`. If the catalog reports a non-positive limit, reject the model as unusable. For effort, choose the desired value when supported; otherwise choose the highest supported value below it in `low → medium → high → xhigh → max` order; omit `effort` when the capability is absent. Do not send `thinking` in v1.
@@ -367,9 +367,9 @@ The original resume file and base64 are never persisted. Explain before the firs
 
 Dashboard stats are total jobs plus counts by status. Filters cover free-text title/company search and status; sort newest first. Empty states link to adding a job.
 
-Add job accepts either URL or pasted text. URL import calls `/api/fetch-job`, then `lib/job-text.ts` uses inert `DOMParser` and reads only `title` and `body.textContent`. It never inserts the document into the live DOM. On any fetch or extraction failure, preserve the URL and focus the paste box with a plain explanation.
+Add job accepts either URL or pasted text. URL import calls `/api/fetch-job`, then `lib/job-text.ts` uses inert `DOMParser`, strips scripts/styles/nav/footer/chrome, prefers `main`/`article` text, and collapses whitespace (never inserts into the live DOM). Import then runs the analyze call to extract `title`, `company`, a cleaned `description`, requirements, keywords, match score, and gaps—filtering cookie banners, related jobs, and other page junk. On fetch failure, preserve the URL and focus the paste box. On analyze failure after a successful fetch, keep the stripped page text for manual edit.
 
-Analysis creates a draft Job. The user can edit title, company, description, requirements, and notes before saving. `matchScore` is an integer 0–100. Status changes save immediately; deleting a job requires confirmation and transactionally deletes its generations.
+Analysis (from paste or after URL import) creates a draft Job. The user can edit title, company, description, requirements, and notes before saving. `matchScore` is an integer 0–100. Status changes save immediately; deleting a job requires confirmation and transactionally deletes its generations.
 
 ### 7.4 Generation and editing
 
