@@ -1,5 +1,6 @@
 'use client';
 
+import { Select } from '@/components/select';
 import { JobStatus, type JobStatus as JobStatusValue } from '@/lib/types';
 
 export function Filters({
@@ -18,10 +19,15 @@ export function Filters({
       <input id="job-search" value={query} onChange={(event) => onQuery(event.target.value)} placeholder="Title or company" />
     </label>
     <label htmlFor="job-status-filter">Status
-      <select id="job-status-filter" value={status} onChange={(event) => onStatus(event.target.value as '' | JobStatusValue)}>
-        <option value="">All statuses</option>
-        {Object.values(JobStatus).map((value) => <option key={value} value={value}>{value}</option>)}
-      </select>
+      <Select
+        id="job-status-filter"
+        value={status}
+        onChange={(value) => onStatus(value as '' | JobStatusValue)}
+        options={[
+          { value: '', label: 'All statuses' },
+          ...Object.values(JobStatus).map((value) => ({ value, label: value })),
+        ]}
+      />
     </label>
   </div>;
 }

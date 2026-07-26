@@ -72,8 +72,9 @@ test('encrypted key validation persists ciphertext and starts locked after reloa
   await expect(
     page.getByText('Key validated. Select models compatible with each task.'),
   ).toBeVisible();
-  for (const select of await page.locator('.model-picker select').all()) {
-    await select.selectOption(model.id);
+  for (const trigger of await page.locator('.model-picker .select-trigger').all()) {
+    await trigger.click();
+    await page.getByRole('option', { name: model.display_name }).click();
   }
   await page.getByRole('button', { name: 'Save key and models' }).click();
   await expect(

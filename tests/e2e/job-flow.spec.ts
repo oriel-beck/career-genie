@@ -170,9 +170,10 @@ test('creates, filters, versions, and downloads a tailored job', async ({ page }
   await page.getByLabel('Company').fill('Example Co');
   await page.getByRole('button', { name: 'Save job' }).click();
   await page.getByLabel('Search jobs').fill('Example');
-  await expect(page.getByRole('link', { name: 'Platform engineer' })).toBeVisible();
+  await page.getByText('Platform engineer').click();
   await page.getByRole('link', { name: 'Review job' }).click();
-  await page.getByLabel('Application status').selectOption(JobStatus.Applied);
+  await page.getByLabel('Application status').click();
+  await page.getByRole('option', { name: JobStatus.Applied }).click();
   await expect(page.getByText('Status saved.')).toBeVisible();
   await page.getByRole('button', { name: 'Generate' }).click();
   await expect(page.getByText('New AI version saved.')).toBeVisible();

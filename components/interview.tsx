@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useFeedback } from '@/components/feedback';
 import { interviewProfile } from '@/lib/claude';
 import { db } from '@/lib/db';
 import { ChatRole, type ChatTurn, type ModelInfo, type Profile } from '@/lib/types';
@@ -18,12 +19,16 @@ export function Interview({
   onEdit: (profile: Profile) => void;
   onProfileSaved: (profile: Profile) => void;
 }) {
+  const { toast, confirm } = useFeedback();
   const [turns, setTurns] = useState<ChatTurn[]>(pending?.turns ?? []);
   const [proposal, setProposal] = useState<Profile | undefined>(pending?.profile);
   const [summary, setSummary] = useState<string[]>(pending?.summary ?? []);
   const [answer, setAnswer] = useState('');
-  const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
+  const [booting, setBooting] = useState(!pending?.turns.length);
+  const [ready, setReady] = useState(Boolean(pending?.turns.length));
+  const profileRef = useRef(profile);
+  profileRef.current = profile;
 
   async function persist(nextTurns: ChatTurn[], nextProposal = proposal, nextSummary = summary, complete = false) {
     await db.interview.put({
@@ -31,12 +36,75 @@ export function Interview({
     });
   }
 
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+
+    async function boot() {
+      setBooting(true);
+      try {
+        const saved = await db.interview.get(1);
+        if (cancelled) return;
+        if (saved?.turns.length) {
+          setTurns(saved.turns);
+          setProposal(saved.pendingProfile);
+          setSummary(saved.pendingSummary ?? []);
+          setReady(true);
+          return;
+        }
+        if (pending?.turns.length) {
+          setReady(true);
+          return;
+        }
+        if (!model) {
+          setReady(false);
+          return;
+        }
+
+        const result = await interviewProfile(model, profileRef.current, [], controller.signal);
+        if (cancelled) return;
+        const assistantTurn: ChatTurn = {
+          id: crypto.randomUUID(),
+          role: ChatRole.Assistant,
+          content: result.reply,
+          createdAt: Date.now(),
+        };
+        const nextTurns = [assistantTurn];
+        setTurns(nextTurns);
+        setProposal(result.proposedProfile ?? undefined);
+        setSummary(result.changes);
+        await persist(nextTurns, result.proposedProfile ?? undefined, result.changes, result.complete);
+        setReady(true);
+      } catch (error) {
+        if (cancelled || controller.signal.aborted) return;
+        toast(
+          error instanceof Error ? error.message : 'Could not start the gap interview. Check your key and interview model.',
+          'error',
+        );
+        setReady(false);
+      } finally {
+        if (!cancelled) setBooting(false);
+      }
+    }
+
+    void boot();
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [model?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!model) return setStatus('Choose an interview model first.');
-    if (!answer.trim()) return setStatus('Write an answer before sending.');
+    if (!model) {
+      toast('Choose an interview model first.', 'error');
+      return;
+    }
+    if (!answer.trim()) {
+      toast('Write an answer before sending.', 'error');
+      return;
+    }
     setBusy(true);
-    setStatus('Asking Career Genie…');
     const userTurn: ChatTurn = { id: crypto.randomUUID(), role: ChatRole.User, content: answer.trim(), createdAt: Date.now() };
     try {
       const result = await interviewProfile(model, profile, [...turns, userTurn]);
@@ -47,9 +115,12 @@ export function Interview({
       setProposal(result.proposedProfile ?? undefined);
       setSummary(result.changes);
       await persist(nextTurns, result.proposedProfile ?? undefined, result.changes, result.complete);
-      setStatus('Response ready.');
-    } catch {
-      setStatus('The interview request failed. Check your key, model, and connection, then try again.');
+      toast('Response ready.', 'success');
+    } catch (error) {
+      toast(
+        error instanceof Error ? error.message : 'The interview request failed. Check your key, model, and connection, then try again.',
+        'error',
+      );
     } finally {
       setBusy(false);
     }
@@ -57,46 +128,125 @@ export function Interview({
 
   async function approve() {
     if (!proposal) return;
+    const ok = await confirm({
+      title: 'Approve profile changes?',
+      message: 'Approved changes replace your saved profile. You can still edit later.',
+      confirmLabel: 'Approve',
+    });
+    if (!ok) return;
     const next = { ...proposal, id: 1 as const, updatedAt: Date.now() };
     await db.profiles.put(next);
     await db.interview.put({ id: 1, turns, complete: false, updatedAt: Date.now() });
     setProposal(undefined);
     setSummary([]);
     onProfileSaved(next);
-    setStatus('Profile changes approved.');
+    toast('Profile changes approved.', 'success');
   }
 
   async function reject() {
+    const ok = await confirm({
+      title: 'Discard proposal?',
+      message: 'The suggested profile changes will be discarded. Your saved profile stays as-is.',
+      confirmLabel: 'Discard',
+      danger: true,
+    });
+    if (!ok) return;
     await db.interview.put({ id: 1, turns, complete: false, updatedAt: Date.now() });
     setProposal(undefined);
     setSummary([]);
-    setStatus('Proposal discarded. Your profile was not changed.');
+    toast('Proposal discarded. Your profile was not changed.', 'info');
+  }
+
+  async function retryStart() {
+    if (!model) {
+      toast('Unlock your key and choose an interview model first.', 'error');
+      return;
+    }
+    setBooting(true);
+    try {
+      const result = await interviewProfile(model, profile, []);
+      const assistantTurn: ChatTurn = {
+        id: crypto.randomUUID(),
+        role: ChatRole.Assistant,
+        content: result.reply,
+        createdAt: Date.now(),
+      };
+      const nextTurns = [assistantTurn];
+      setTurns(nextTurns);
+      setProposal(result.proposedProfile ?? undefined);
+      setSummary(result.changes);
+      await persist(nextTurns, result.proposedProfile ?? undefined, result.changes, result.complete);
+      setReady(true);
+    } catch (error) {
+      toast(
+        error instanceof Error ? error.message : 'Could not start the gap interview.',
+        'error',
+      );
+    } finally {
+      setBooting(false);
+    }
   }
 
   return (
-    <section className="stack" aria-labelledby="interview-title">
+    <section className="stack" aria-labelledby="interview-title" aria-busy={booting || busy || undefined}>
       <h2 id="interview-title">Gap interview</h2>
       <p>Answer questions to clarify your existing experience. Suggested changes never apply until you approve them.</p>
-      <div className="transcript" aria-live="polite">
-        {turns.map((turn) => <p key={turn.id} className={`turn ${turn.role}`}><strong>{turn.role === ChatRole.User ? 'You' : 'Career Genie'}:</strong> {turn.content}</p>)}
-      </div>
-      <form className="stack" onSubmit={submit}>
-        <label htmlFor="interview-answer">Your answer</label>
-        <textarea id="interview-answer" value={answer} onChange={(event) => setAnswer(event.target.value)} rows={3} disabled={busy} />
-        <button type="submit" disabled={busy}>{busy ? 'Sending…' : 'Send answer'}</button>
-      </form>
-      {proposal && (
+      {booting ? (
+        <div className="loader" role="status" aria-live="polite">
+          <span className="loader-spinner" aria-hidden="true" />
+          <div className="loader-copy">
+            <p className="loader-title">Preparing your first question</p>
+            <p className="loader-hint">Career Genie is reviewing your profile for gaps.</p>
+          </div>
+        </div>
+      ) : !ready || !turns.length ? (
+        <div className="stack">
+          <p className="hint">
+            {model
+              ? 'The first interview question is not ready yet.'
+              : 'Unlock your key and choose an interview model to start the gap interview.'}
+          </p>
+          <button type="button" onClick={() => void retryStart()} disabled={!model}>
+            Start interview
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="transcript" aria-live="polite">
+            {turns.map((turn) => (
+              <p key={turn.id} className={`turn ${turn.role}`}>
+                <strong>{turn.role === ChatRole.User ? 'You' : 'Career Genie'}:</strong> {turn.content}
+              </p>
+            ))}
+          </div>
+          {busy ? (
+            <div className="loader" role="status" aria-live="polite">
+              <span className="loader-spinner" aria-hidden="true" />
+              <div className="loader-copy">
+                <p className="loader-title">Thinking about your answer</p>
+                <p className="loader-hint">The next question will appear when ready.</p>
+              </div>
+            </div>
+          ) : (
+            <form className="stack" onSubmit={submit}>
+              <label htmlFor="interview-answer">Your answer</label>
+              <textarea id="interview-answer" value={answer} onChange={(event) => setAnswer(event.target.value)} rows={3} />
+              <button type="submit">Send answer</button>
+            </form>
+          )}
+        </>
+      )}
+      {proposal && !booting && (
         <aside className="proposal" aria-labelledby="proposal-title">
           <h3 id="proposal-title">Proposed profile changes</h3>
           <ul>{summary.map((change) => <li key={change}>{change}</li>)}</ul>
           <div className="button-row">
-            <button type="button" onClick={approve}>Approve</button>
+            <button type="button" onClick={() => void approve()}>Approve</button>
             <button type="button" onClick={() => onEdit(proposal)}>Edit</button>
-            <button type="button" className="secondary" onClick={reject}>Reject</button>
+            <button type="button" className="secondary" onClick={() => void reject()}>Reject</button>
           </div>
         </aside>
       )}
-      <p aria-live="polite" className="status">{status}</p>
     </section>
   );
 }

@@ -2,8 +2,9 @@
 
 import { pdf } from '@react-pdf/renderer';
 import type { DocumentProps } from '@react-pdf/renderer';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { CoverLetterPdf } from '@/components/cover-letter-pdf';
+import { useFeedback } from '@/components/feedback';
 import { PdfPreview } from '@/components/pdf-preview';
 import { ResumePdf } from '@/components/resume-pdf';
 import type { Generation, GroundedText } from '@/lib/types';
@@ -15,15 +16,6 @@ function TextEditor({ value, onChange, label }: { value: GroundedText; onChange:
   </label>;
 }
 
-function download(name: string, content: ReactElement<DocumentProps>) {
-  void pdf(content).toBlob().then((blob) => {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url; link.download = name; link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
-  });
-}
-
 export function GenerationEditor({
   generation,
   onChange,
@@ -33,16 +25,50 @@ export function GenerationEditor({
   onChange: (generation: Generation) => void;
   onSave: () => void;
 }) {
+  const { toast } = useFeedback();
+  const [pdfBusy, setPdfBusy] = useState<'resume' | 'cover' | null>(null);
   const resume = generation.resume;
   const cover = generation.coverLetter;
   const updateResume = (next: Generation['resume']) => onChange({ ...generation, resume: next });
   const updateCover = (next: Generation['coverLetter']) => onChange({ ...generation, coverLetter: next });
 
+  async function download(name: string, content: ReactElement<DocumentProps>, kind: 'resume' | 'cover') {
+    setPdfBusy(kind);
+    try {
+      const blob = await pdf(content).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Could not generate PDF.', 'error');
+    } finally {
+      setPdfBusy(null);
+    }
+  }
+
   return <section className="stack generation-editor">
-    <div className="button-row"><button type="button" onClick={onSave}>Save edits as new version</button>
-      <button type="button" className="secondary" onClick={() => download(`resume-v${generation.version}.pdf`, <ResumePdf document={resume} />)}>Download resume PDF</button>
-      <button type="button" className="secondary" onClick={() => download(`cover-letter-v${generation.version}.pdf`, <CoverLetterPdf document={cover} />)}>Download cover letter PDF</button>
+    <div className="button-row"><button type="button" onClick={onSave} disabled={pdfBusy !== null}>Save edits as new version</button>
+      <button type="button" className="secondary" disabled={pdfBusy !== null} onClick={() => void download(`resume-v${generation.version}.pdf`, <ResumePdf document={resume} />, 'resume')}>
+        {pdfBusy === 'resume' ? 'Preparing resume PDF…' : 'Download resume PDF'}
+      </button>
+      <button type="button" className="secondary" disabled={pdfBusy !== null} onClick={() => void download(`cover-letter-v${generation.version}.pdf`, <CoverLetterPdf document={cover} />, 'cover')}>
+        {pdfBusy === 'cover' ? 'Preparing cover letter PDF…' : 'Download cover letter PDF'}
+      </button>
     </div>
+    {pdfBusy ? (
+      <div className="loader" role="status" aria-live="polite">
+        <span className="loader-spinner" aria-hidden="true" />
+        <div className="loader-copy">
+          <p className="loader-title">Generating PDF</p>
+          <p className="loader-hint">
+            {pdfBusy === 'resume' ? 'Building your resume download.' : 'Building your cover letter download.'}
+          </p>
+        </div>
+      </div>
+    ) : null}
     <div className="editor-columns">
       <section className="card stack"><h2>Resume</h2>
         <p className="readonly">Name and contact are copied from your profile and cannot be edited here.</p>

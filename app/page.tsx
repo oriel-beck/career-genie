@@ -36,7 +36,6 @@ export default function HomePage() {
           >
             {hasProfile ? "Open jobs" : "Start onboarding"}
           </Link>
-          {hasProfile ? <Link href="/settings">Settings</Link> : null}
         </div>
       </section>
     </AppShell>

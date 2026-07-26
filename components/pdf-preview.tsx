@@ -12,6 +12,7 @@ export function PdfPreview({ document, title }: { document: ReactElement<Documen
 
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     urlRef.current = undefined;
+    setUrl(undefined);
 
     void pdf(document).toBlob().then((blob) => {
       const nextUrl = URL.createObjectURL(blob);
@@ -30,7 +31,17 @@ export function PdfPreview({ document, title }: { document: ReactElement<Documen
     };
   }, [document]);
 
-  if (!url) return <p aria-live="polite">Preparing PDF preview…</p>;
+  if (!url) {
+    return (
+      <div className="loader" role="status" aria-live="polite">
+        <span className="loader-spinner" aria-hidden="true" />
+        <div className="loader-copy">
+          <p className="loader-title">Preparing PDF</p>
+          <p className="loader-hint">Rendering {title.toLowerCase()}. This usually takes a few seconds.</p>
+        </div>
+      </div>
+    );
+  }
 
-  return <iframe src={url} title={title} style={{ border: 0, height: '100%', width: '100%' }} />;
+  return <iframe className="pdf-preview-frame" src={url} title={title} />;
 }

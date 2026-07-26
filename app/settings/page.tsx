@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/app-shell';
 import { CheckboxOption, RadioOption } from '@/components/choice';
+import { useFeedback } from '@/components/feedback';
 import { ModelPicker } from '@/components/model-picker';
+import { UnlockKeyForm } from '@/components/unlock-key-form';
 import { backupJson, importBackup } from '@/lib/backup';
 import { db } from '@/lib/db';
-import { commitStagedKey, lock, stageKey, unlock } from '@/lib/keys';
+import { commitStagedKey, lock, stageKey } from '@/lib/keys';
 import { listModels } from '@/lib/models';
 import { storageEstimate } from '@/lib/storage';
 import { KeyStorageMode, type CallKind as CallKindValue, type ModelInfo, type Settings, type UsageRecord } from '@/lib/types';
@@ -19,6 +21,7 @@ function download(name: string, content: string) {
 }
 
 export default function SettingsPage() {
+  const { toast, confirm } = useFeedback();
   const [settings, setSettings] = useState<Settings>();
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [passphrase, setPassphrase] = useState('');
@@ -27,7 +30,6 @@ export default function SettingsPage() {
   const [estimate, setEstimate] = useState<StorageEstimate>();
   const [usage, setUsage] = useState<UsageRecord[]>([]);
   const [deleteText, setDeleteText] = useState('');
-  const [status, setStatus] = useState('');
 
   async function refresh() {
     const [saved, size, records] = await Promise.all([db.settings.get(1), storageEstimate(), db.usage.toArray()]);
@@ -40,8 +42,10 @@ export default function SettingsPage() {
   }, []);
 
   async function loadModels() {
-    try { setModels(await listModels()); setStatus('Live model catalog loaded.'); }
-    catch { setStatus('Unlock or validate your key before loading models.'); }
+    try { setModels(await listModels()); toast('Live model catalog loaded.', 'success'); }
+    catch (error) {
+      toast(error instanceof Error ? error.message : 'Unlock or validate your key before loading models.', 'error');
+    }
   }
   async function changeModels(kind: CallKindValue, model: string) {
     if (!settings) return;
@@ -55,13 +59,8 @@ export default function SettingsPage() {
       stageKey(newKey);
       await listModels();
       await commitStagedKey(settings.keyStorage, passphrase, plainConfirmed);
-      setNewKey(''); setStatus('Key storage updated and key validated.'); await refresh();
-    } catch (error) { setStatus(error instanceof Error ? error.message : 'Could not update key storage.'); }
-  }
-  async function unlockKey(event: React.FormEvent) {
-    event.preventDefault();
-    try { await unlock(passphrase); setPassphrase(''); setStatus('Key unlocked.'); }
-    catch { setStatus('Wrong passphrase or damaged key data.'); }
+      setNewKey(''); toast('Key storage updated and key validated.', 'success'); await refresh();
+    } catch (error) { toast(error instanceof Error ? error.message : 'Could not update key storage.', 'error'); }
   }
   async function chooseFolder() {
     try {
@@ -69,24 +68,41 @@ export default function SettingsPage() {
       const folderHandle = await picker({ mode: 'readwrite' });
       if (!settings) return;
       const next = { ...settings, folderHandle, updatedAt: Date.now() };
-      await db.settings.put(next); setSettings(next); setStatus(`Folder selected: ${folderHandle.name}.`);
-    } catch { setStatus('Folder selection was cancelled or denied. Browser downloads remain available.'); }
+      await db.settings.put(next); setSettings(next); toast(`Folder selected: ${folderHandle.name}.`, 'success');
+    } catch { toast('Folder selection was cancelled or denied. Browser downloads remain available.', 'info'); }
   }
   async function exportBackup() {
     download('career-genie-backup.json', await backupJson());
-    setStatus('Backup download started. It does not include your key, folder, PDFs, or original resume.');
+    toast('Backup download started. It does not include your key, folder, PDFs, or original resume.', 'info');
   }
   async function importFile(file?: File) {
     if (!file) return;
+    const ok = await confirm({
+      title: 'Import backup?',
+      message: 'This replaces local profile, interview, jobs, generations, and usage. Key and folder settings stay. A pre-import backup downloads first if data already exists.',
+      confirmLabel: 'Import backup',
+      danger: true,
+    });
+    if (!ok) return;
     try {
       if (await db.profiles.count() || await db.jobs.count() || await db.usage.count()) download('career-genie-pre-import-backup.json', await backupJson());
       await importBackup(await file.text());
-      setStatus('Backup replaced local profile, interview, jobs, generations, and usage. Key and folder settings were kept.');
+      toast('Backup replaced local profile, interview, jobs, generations, and usage. Key and folder settings were kept.', 'success');
       await refresh();
-    } catch (error) { setStatus(error instanceof Error ? error.message : 'Backup import failed.'); }
+    } catch (error) { toast(error instanceof Error ? error.message : 'Backup import failed.', 'error'); }
   }
   async function deleteAll() {
-    if (deleteText !== 'DELETE') return setStatus('Type DELETE to confirm.');
+    if (deleteText !== 'DELETE') {
+      toast('Type DELETE to confirm.', 'error');
+      return;
+    }
+    const ok = await confirm({
+      title: 'Delete all local data?',
+      message: "This permanently removes this browser's Career Genie database. Downloads and browser backups are not erased.",
+      confirmLabel: 'Delete everything',
+      danger: true,
+    });
+    if (!ok) return;
     lock();
     await db.delete();
     location.assign('/onboarding');
@@ -101,8 +117,10 @@ export default function SettingsPage() {
     <h1>Settings</h1>
     <section className="card stack"><h2>Key</h2>
       <p>Storage: {settings?.keyStorage ?? KeyStorageMode.Encrypted}. Saved key: {settings?.keyHint ? `••••${settings.keyHint}` : 'none'}.</p>
-      <div className="button-row"><button type="button" onClick={() => { lock(); setStatus('Key locked.'); }}>Lock key</button><button type="button" onClick={loadModels}>Load live model catalog</button></div>
-      {settings?.keyStorage === KeyStorageMode.Encrypted && <form className="stack" onSubmit={unlockKey}><label htmlFor="unlock-passphrase">Unlock passphrase<input id="unlock-passphrase" type="password" value={passphrase} onChange={(event) => setPassphrase(event.target.value)} required /></label><button>Unlock</button></form>}
+      <div className="button-row"><button type="button" onClick={() => { lock(); toast('Key locked.', 'info'); }}>Lock key</button><button type="button" onClick={loadModels}>Load live model catalog</button></div>
+      {settings?.keyStorage === KeyStorageMode.Encrypted && (
+        <UnlockKeyForm id="unlock-passphrase" onUnlocked={() => toast('Key unlocked.', 'success')} />
+      )}
       <form className="stack" onSubmit={changeKey}><h3>Change key or storage mode</h3>
         <fieldset>
           <legend>Storage mode</legend>
@@ -150,7 +168,6 @@ export default function SettingsPage() {
       </div>
     </section>
     <section className="card stack"><h2>Usage</h2><p>Token totals only. Anthropic bills usage to your key; Career Genie does not estimate cost.</p><ul>{Object.entries(totals).map(([name, tokens]) => <li key={name}>{name}: {tokens.toLocaleString()} tokens</li>)}</ul></section>
-    <section className="card danger stack"><h2>Delete all local data</h2><p>This removes this browser&apos;s Career Genie database. It cannot erase downloads or browser backups.</p><label htmlFor="delete-confirmation">Type DELETE to confirm<input id="delete-confirmation" value={deleteText} onChange={(event) => setDeleteText(event.target.value)} /></label><button type="button" onClick={deleteAll}>Delete all local data</button></section>
-    <p className="status" aria-live="polite">{status}</p>
+    <section className="card danger stack"><h2>Delete all local data</h2><p>This removes this browser&apos;s Career Genie database. It cannot erase downloads or browser backups.</p><label htmlFor="delete-confirmation">Type DELETE to confirm<input id="delete-confirmation" value={deleteText} onChange={(event) => setDeleteText(event.target.value)} /></label><button type="button" className="danger" onClick={() => void deleteAll()}>Delete all local data</button></section>
   </section></AppShell>;
 }

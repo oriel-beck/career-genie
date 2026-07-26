@@ -1,5 +1,6 @@
 'use client';
 
+import { Select } from '@/components/select';
 import { CallKind, type CallKind as CallKindValue, type ModelInfo } from '@/lib/types';
 
 const callLabels: Record<CallKindValue, string> = {
@@ -30,13 +31,19 @@ export function ModelPicker({
       <legend>Models</legend>
       {kinds.map((kind) => {
         const options = models.filter((model) => compatible(model, kind));
+        const fieldId = `model-${kind}`;
         return (
-          <label key={kind}>
+          <label key={kind} htmlFor={fieldId}>
             {callLabels[kind]}
-            <select value={selected[kind] ?? ''} onChange={(event) => onChange(kind, event.target.value)}>
-              <option value="">Choose a compatible model</option>
-              {options.map((model) => <option key={model.id} value={model.id}>{model.display_name}</option>)}
-            </select>
+            <Select
+              id={fieldId}
+              value={selected[kind] ?? ''}
+              onChange={(value) => onChange(kind, value)}
+              options={[
+                { value: '', label: 'Choose a compatible model' },
+                ...options.map((model) => ({ value: model.id, label: model.display_name })),
+              ]}
+            />
             {!options.length && <span className="field-error">No compatible live model is available.</span>}
           </label>
         );
