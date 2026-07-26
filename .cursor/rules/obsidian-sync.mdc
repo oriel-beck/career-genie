@@ -1,0 +1,45 @@
+---
+description: Keep Obsidian vault docs in sync when changing code or services
+alwaysApply: true
+---
+
+# Obsidian Documentation Sync
+
+When you change application code, APIs, services, schemas, or operational behavior, also update the relevant notes in the **Obsidian vault** (`career-genie-vault/` at repo root; gitignored).
+
+## When to Update Vault Docs
+
+Update (or create) vault notes when a change affects:
+
+- Service behavior, endpoints, or request/response shapes
+- Data models, Prisma schema, or validation rules
+- Auth, PCI boundaries, or compliance-relevant flows
+- Env vars, deployment steps, or runbooks
+- Architecture, integrations, or cross-app contracts (main ↔ PCI)
+
+Skip vault updates for trivial edits (formatting, rename-only refactors, comments) with no behavioral impact.
+
+## How to Find Relevant Notes
+
+1. Search the vault for the service, route, model, or feature name (`get_workspace_files` with a pattern, or `view` on likely folders).
+2. Use this mapping as a starting point:
+   - `apps/main/**` → main app / dashboard / registration flows
+   - `apps/pci/**` → PCI app, payment handling, PDF generation
+   - `packages/database/**` → database schema, migrations workflow, backup/restore
+   - `packages/shared/**` → shared schemas, types, validation
+3. If no note exists, create one under a sensible path (e.g. `services/pci.md`, `database/schema.md`).
+
+## How to Edit
+
+Prefer the **Obsidian MCP** (`user-obsidian`): `view` → `str_replace` / `insert` / `create`.
+
+Fallback: edit files directly under `career-genie-vault/`.
+
+Do **not** rely on repo `docs/` as a substitute for vault updates when vault notes cover the same topic—keep the vault current.
+
+## Pre-Completion Checklist
+
+- [ ] Identified the vault note(s) affected by the change
+- [ ] Updated behavior, API contracts, env vars, or diagrams—not just a changelog line
+- [ ] Created a new note if the service had no documentation yet
+- [ ] Mentioned vault doc updates in your summary to the user

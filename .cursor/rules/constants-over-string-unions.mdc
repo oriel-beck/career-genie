@@ -1,0 +1,31 @@
+---
+description: Use const objects instead of string enums and reusable string literal unions
+globs: *.ts,*.tsx
+alwaysApply: false
+---
+# Constants Over String Enums and Unions
+
+For project-owned finite string sets, define an `as const` object and derive the value type from it. Use this pattern instead of string enums and named unions of string literals.
+
+```typescript
+// Avoid
+export type Name = "PRIMARY" | "SECONDARY";
+export enum Status {
+  Active = "ACTIVE",
+  Inactive = "INACTIVE",
+}
+
+// Use
+export const Name = {
+  Primary: "PRIMARY",
+  Secondary: "SECONDARY",
+} as const;
+
+export type Name = (typeof Name)[keyof typeof Name];
+```
+
+TypeScript keeps value and type names in separate namespaces, so use the same singular name for both. This preserves enum-like call sites such as `Name.Primary` and avoids separate singular/plural APIs.
+
+Use the constant wherever a runtime value is needed instead of repeating the string literal.
+
+Do not extract one-off string literal types that describe another API's keys or options, such as `Pick<T, "id" | "name">`, third-party component props, or framework configuration. Do not replace generated or dependency-owned enums.

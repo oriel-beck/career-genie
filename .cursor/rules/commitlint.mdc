@@ -1,0 +1,51 @@
+---
+description: Use Conventional Commits / commitlint syntax for all git commits
+alwaysApply: true
+---
+
+# Commitlint (Conventional Commits)
+
+Every git commit message MUST follow [Conventional Commits](https://www.conventionalcommits.org/) in commitlint form:
+
+```text
+type(scope)!: subject
+
+optional body
+
+optional footer
+```
+
+## Format rules
+
+- **type** (required): one of `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+- **scope** (optional): short noun for the area, e.g. `lib`, `ui`, `api`, `jobs`, `security`, `ci`, `cursor`
+- **!** after type/scope marks a breaking change; also add a `BREAKING CHANGE:` footer when applicable
+- **subject** (required): imperative, lowercase start, no trailing period, ≤72 characters preferred
+- Blank line between subject and body when a body is present
+- Body explains **why**, not a file list
+- Do not wrap the subject in quotes inside the message itself
+
+## Examples
+
+```text
+feat(api): add safe public job URL fetch route
+
+Blocks private and non-HTTPS destinations before connecting.
+```
+
+```text
+fix(ui): stop putting CSP nonce on body
+
+Browsers hide nonce attributes and broke hydration.
+```
+
+```text
+chore(cursor): add commitlint conventional-commit rule
+```
+
+## When committing
+
+- Prefer several small commits by concern over one dump commit
+- Never mix unrelated refactors into a `feat` commit
+- Use `test` for test-only changes, `ci` for workflows/scripts that gate CI, `docs` for README/PLAN-only updates
+- If amending is requested, the resulting message must still satisfy this format
