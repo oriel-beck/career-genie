@@ -65,19 +65,14 @@ test('encrypted key validation persists ciphertext and starts locked after reloa
   page,
 }) => {
   await mockAnthropic(page);
-  await page.goto('/onboarding');
+  await page.goto('/settings');
   await page.getByLabel('Anthropic API key').fill('test-key-not-real');
-  await page.getByLabel('Encryption passphrase').fill('correct horse battery staple');
-  await page.getByRole('button', { name: 'Validate key' }).press('Enter');
+  await page.getByLabel('Passphrase').fill('correct horse battery staple');
+  await page.getByRole('button', { name: 'Validate and save key' }).click();
   await expect(
-    page.getByText('Key validated. Models defaulted for each task — change any before saving.'),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'Save key and models' }).click();
-  await expect(
-    page.getByText('Key and models saved. Upload your resume next.'),
+    page.getByText('Key storage updated and key validated. Models defaulted for each task.'),
   ).toBeVisible();
   await page.reload();
-  await page.goto('/settings');
   await expect(page.getByLabel('Unlock passphrase')).toBeVisible();
   const stored = await page.evaluate(
     () =>

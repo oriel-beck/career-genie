@@ -70,9 +70,15 @@ export default function SettingsPage() {
     if (!settings) return;
     try {
       stageKey(newKey);
-      await listModels();
+      const catalog = await listModels();
+      setModels(catalog);
       await commitStagedKey(settings.keyStorage, passphrase, plainConfirmed);
-      setNewKey(''); toast('Key storage updated and key validated.', 'success'); await refresh();
+      const saved = (await db.settings.get(1)) ?? settings;
+      const next = { ...saved, models: defaultModelChoices(catalog, saved.models), updatedAt: Date.now() };
+      await db.settings.put(next);
+      setSettings(next);
+      setNewKey('');
+      toast('Key storage updated and key validated. Models defaulted for each task.', 'success');
     } catch (error) { toast(error instanceof Error ? error.message : 'Could not update key storage.', 'error'); }
   }
   async function chooseFolder() {

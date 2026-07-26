@@ -3,18 +3,14 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/app-shell';
-import { CheckboxOption, RadioOption } from '@/components/choice';
 import { useFeedback } from '@/components/feedback';
 import { Interview } from '@/components/interview';
-import { ModelPicker } from '@/components/model-picker';
 import { ProfileEditor } from '@/components/profile-editor';
 import { db } from '@/lib/db';
-import { stageKey, commitStagedKey } from '@/lib/keys';
-import { defaultModelChoices } from '@/lib/model-config';
 import { listModels } from '@/lib/models';
 import { parseResume } from '@/lib/parse-resume';
 import { persistStorage } from '@/lib/storage';
-import { CallKind, KeyStorageMode, type CallKind as CallKindValue, type ModelInfo, type Profile } from '@/lib/types';
+import { CallKind, type ModelInfo, type Profile, type Settings } from '@/lib/types';
 
 function id() { return crypto.randomUUID(); }
 function claim(text: string) { return { id: id(), text }; }
@@ -58,17 +54,14 @@ function hydrateProfile(raw: Record<string, unknown>): Profile {
 
 export default function OnboardingPage() {
   const { toast } = useFeedback();
-  const [mode, setMode] = useState<KeyStorageMode>(KeyStorageMode.Encrypted);
-  const [key, setKey] = useState('');
-  const [passphrase, setPassphrase] = useState('');
-  const [plainConfirmed, setPlainConfirmed] = useState(false);
+  const [settings, setSettings] = useState<Settings>();
   const [models, setModels] = useState<ModelInfo[]>([]);
-  const [selected, setSelected] = useState<Partial<Record<CallKindValue, string>>>({});
   const [file, setFile] = useState<File>();
   const [profile, setProfile] = useState<Profile>();
   const [editing, setEditing] = useState<Profile>();
-  const [validating, setValidating] = useState(false);
   const [parsing, setParsing] = useState(false);
+
+  const ready = Boolean(settings?.keyHint && settings.models[CallKind.Parse] && settings.models[CallKind.Interview]);
 
   useEffect(() => {
     void (async () => {
@@ -77,58 +70,20 @@ export default function OnboardingPage() {
         db.settings.get(1),
       ]);
       if (savedProfile) setProfile(savedProfile);
-      if (savedSettings) setMode(savedSettings.keyStorage);
-      // Reload the live catalog when a key is already unlocked so the interview
-      // can ask its first question without re-validating.
+      if (savedSettings) setSettings(savedSettings);
       try {
-        const catalog = await listModels();
-        setModels(catalog);
-        setSelected(defaultModelChoices(catalog, savedSettings?.models ?? {}));
+        setModels(await listModels());
       } catch {
-        if (savedSettings) setSelected(savedSettings.models);
-        /* locked or missing key — user can validate again */
+        /* locked or missing key — parse/interview will ask again */
       }
     })();
   }, []);
 
-  async function validateKey(event: React.FormEvent) {
-    event.preventDefault();
-    setValidating(true);
-    try {
-      stageKey(key);
-      const catalog = await listModels();
-      setModels(catalog);
-      setSelected((prev) => defaultModelChoices(catalog, prev));
-      toast('Key validated. Models defaulted for each task — change any before saving.', 'success');
-    } catch {
-      toast('Could not validate the key. Check it and try again.', 'error');
-    } finally {
-      setValidating(false);
-    }
-  }
-
-  async function saveModels() {
-    if (Object.values(CallKind).some((kind) => !selected[kind])) {
-      toast('Choose a model for every call type.', 'error');
-      return;
-    }
-    try {
-      await commitStagedKey(mode, passphrase, plainConfirmed);
-      const settings = await db.settings.get(1);
-      if (!settings) throw new Error();
-      await db.settings.put({ ...settings, models: selected, updatedAt: Date.now() });
-      setKey('');
-      toast('Key and models saved. Upload your resume next.', 'success');
-    } catch (error) {
-      toast(error instanceof Error ? error.message : 'Could not save key settings.', 'error');
-    }
-  }
-
   async function parseFile() {
-    const modelId = selected[CallKind.Parse];
+    const modelId = settings?.models[CallKind.Parse];
     const model = models.find((candidate) => candidate.id === modelId);
     if (!file || !model) {
-      toast('Choose a resume file and a compatible parse model.', 'error');
+      toast('Choose a resume file and set a parse model in Settings.', 'error');
       return;
     }
     setParsing(true);
@@ -158,42 +113,17 @@ export default function OnboardingPage() {
   return (
     <AppShell>
       <section className="page stack">
-        <h1>Set up Career Genie</h1>
+        <h1>Profile</h1>
         <p>Your original resume file is never saved. Before parsing, its content goes directly from your browser to Anthropic using your key.</p>
-        <section className="card stack" aria-labelledby="key-title">
-          <h2 id="key-title">1. Key storage and validation</h2>
-          <form className="stack" onSubmit={validateKey}>
-            <fieldset>
-              <legend>Storage mode</legend>
-              {Object.values(KeyStorageMode).map((value) => (
-                <RadioOption
-                  key={value}
-                  name="mode"
-                  value={value}
-                  checked={mode === value}
-                  onChange={() => setMode(value)}
-                >
-                  {value}
-                </RadioOption>
-              ))}
-            </fieldset>
-            <label htmlFor="api-key">Anthropic API key</label>
-            <input id="api-key" type="password" autoComplete="off" value={key} onChange={(event) => setKey(event.target.value)} required />
-            {mode === KeyStorageMode.Encrypted && <label htmlFor="passphrase">Encryption passphrase<input id="passphrase" type="password" value={passphrase} onChange={(event) => setPassphrase(event.target.value)} minLength={12} required /></label>}
-            {mode === KeyStorageMode.Plaintext && (
-              <CheckboxOption checked={plainConfirmed} onChange={setPlainConfirmed}>
-                I understand this stores my key unencrypted in this browser.
-              </CheckboxOption>
-            )}
-            <button type="submit" disabled={validating || parsing}>{validating ? 'Validating…' : 'Validate key'}</button>
-          </form>
-          {!!models.length && <>
-            <ModelPicker models={models} selected={selected} onChange={(kind, model) => setSelected({ ...selected, [kind]: model })} />
-            <button type="button" onClick={saveModels} disabled={parsing}>Save key and models</button>
-          </>}
-        </section>
+        {!ready && (
+          <section className="card stack">
+            <h2>API key and models</h2>
+            <p>Add your Anthropic key and choose models in Settings before parsing a resume or running the interview.</p>
+            <Link className="button-link" href="/settings">Open Settings</Link>
+          </section>
+        )}
         <section className="card stack" aria-labelledby="resume-title" aria-busy={parsing || undefined}>
-          <h2 id="resume-title">2. Resume</h2>
+          <h2 id="resume-title">Resume</h2>
           {parsing ? (
             <div className="loader" role="status" aria-live="polite">
               <span className="loader-spinner" aria-hidden="true" />
@@ -211,6 +141,7 @@ export default function OnboardingPage() {
                   type="file"
                   accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={(event) => setFile(event.target.files?.[0] ?? undefined)}
+                  disabled={!ready}
                 />
                 <label htmlFor="resume-file" className="file-upload-target">
                   <span className="file-upload-title">
@@ -223,14 +154,24 @@ export default function OnboardingPage() {
                   </span>
                 </label>
               </div>
-              <button type="button" onClick={parseFile} disabled={!file}>
+              <button type="button" onClick={parseFile} disabled={!ready || !file}>
                 Parse resume
               </button>
             </>
           )}
         </section>
-        {editing && <section className="card"><h2>3. Confirm your profile</h2><ProfileEditor profile={editing} onSave={saveProfile} submitLabel="Confirm and save profile" /></section>}
-        {profile && <section className="card"><Interview profile={profile} model={models.find((model) => model.id === selected[CallKind.Interview])} onEdit={setEditing} onProfileSaved={setProfile} /><Link className="button-link" href="/settings">Finish for now</Link></section>}
+        {editing && <section className="card"><h2>Confirm your profile</h2><ProfileEditor profile={editing} onSave={saveProfile} submitLabel="Confirm and save profile" /></section>}
+        {profile && (
+          <section className="card">
+            <Interview
+              profile={profile}
+              model={models.find((model) => model.id === settings?.models[CallKind.Interview])}
+              onEdit={setEditing}
+              onProfileSaved={setProfile}
+            />
+            <Link className="button-link" href="/dashboard">Finish for now</Link>
+          </section>
+        )}
       </section>
     </AppShell>
   );
