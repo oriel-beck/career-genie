@@ -154,6 +154,22 @@ nav a[aria-current="page"] {
   gap: 1rem;
 }
 
+.stack > :is(h1, h2, h3) {
+  margin: 0;
+}
+
+.page.stack > h1 {
+  margin-bottom: -0.35rem;
+}
+
+.card.stack {
+  gap: 0.55rem;
+}
+
+.card.stack > :is(h2, h3) {
+  margin-bottom: -0.1rem;
+}
+
 .card,
 .proposal {
   padding: clamp(1rem, 3vw, 2rem);
