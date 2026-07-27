@@ -157,8 +157,10 @@ export default function DashboardPage() {
           <label htmlFor="job-url">Job URL (optional)<input id="job-url" type="url" value={url} onChange={(event) => setUrl(event.target.value)} /></label>
           <button type="button" className="secondary" onClick={() => void importUrl()}>Import URL</button>
           <label htmlFor="job-paste">Paste job description<textarea id="job-paste" ref={pasteRef} value={paste} onChange={(event) => setPaste(event.target.value)} rows={8} /></label>
-          <button type="button" onClick={() => void analyze()}>Analyze and create draft</button>
-          <button type="button" className="secondary" onClick={() => { if (paste.trim()) setDraft(blankJob(paste, url || undefined)); }}>Create without analysis</button>
+          <div className="button-row">
+            <button type="button" onClick={() => void analyze()}>Analyze and create draft</button>
+            <button type="button" className="secondary" onClick={() => { if (paste.trim()) setDraft(blankJob(paste, url || undefined)); }}>Create without analysis</button>
+          </div>
         </>
       )}
     </section>
