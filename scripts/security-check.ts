@@ -54,8 +54,8 @@ const proxy = join(root, 'proxy.ts');
 const connectSource = existsSync(proxy)
   ? text(proxy).match(/["`]connect-src\s+(.+?)["`]/)?.[1]?.trim()
   : undefined;
-if (connectSource !== "'self' https://api.anthropic.com") {
-  failures.push('CSP connect-src must contain only self and api.anthropic.com');
+if (connectSource !== "'self' https://api.anthropic.com data:") {
+  failures.push('CSP connect-src must be self, api.anthropic.com, and data:');
 }
 
 const packageJson = JSON.parse(text(join(root, 'package.json'))) as {

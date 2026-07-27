@@ -4,11 +4,15 @@ function csp(nonce: string): string {
   const scriptEval = process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : '';
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${scriptEval}`,
+    // wasm-unsafe-eval: yoga-layout (via @react-pdf/renderer) instantiates WASM in-browser
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval'${scriptEval}`,
     `style-src 'self' 'nonce-${nonce}'`,
+    // Next sets style="display: none" during streaming; hashes don't cover style attrs
+    "style-src-attr 'unsafe-inline'",
     "img-src 'self' blob: data:",
     "font-src 'self'",
-    "connect-src 'self' https://api.anthropic.com",
+    // data: : yoga loads its WASM binary via fetch(data:application/octet-stream;base64,...)
+    "connect-src 'self' https://api.anthropic.com data:",
     "frame-src 'self' blob:",
     "worker-src 'self' blob:",
     "object-src 'none'",

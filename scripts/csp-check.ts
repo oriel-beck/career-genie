@@ -4,11 +4,12 @@ const target = process.argv[2];
 const localUrl = 'http://127.0.0.1:3000';
 const expected = [
   "default-src 'self'",
-  "script-src 'self' 'nonce-{NONCE}' 'strict-dynamic'",
+  "script-src 'self' 'nonce-{NONCE}' 'strict-dynamic' 'wasm-unsafe-eval'",
   "style-src 'self' 'nonce-{NONCE}'",
+  "style-src-attr 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "font-src 'self'",
-  "connect-src 'self' https://api.anthropic.com",
+  "connect-src 'self' https://api.anthropic.com data:",
   "frame-src 'self' blob:",
   "worker-src 'self' blob:",
   "object-src 'none'",
