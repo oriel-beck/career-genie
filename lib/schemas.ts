@@ -153,13 +153,18 @@ export const parseOutputSchema = {
   },
 } as const;
 
+/**
+ * Wire schema for Anthropic structured outputs. A nested Profile object is
+ * rejected unless every object sets additionalProperties:false, and a full
+ * Profile schema inflates grammar size — keep the profile as a JSON string.
+ */
 export const interviewOutputSchema = {
   type: 'object' as const,
   additionalProperties: false as const,
-  required: ['reply', 'proposedProfile', 'changes', 'complete'] as const,
+  required: ['reply', 'proposedProfileJson', 'changes', 'complete'] as const,
   properties: {
     reply: { type: 'string' as const },
-    proposedProfile: { type: ['object', 'null'] as const },
+    proposedProfileJson: { type: ['string', 'null'] as const },
     changes: {
       type: 'array' as const,
       items: { type: 'string' as const },
@@ -256,6 +261,25 @@ export function assertInterviewOutput(value: unknown): asserts value is {
   if (typeof value.reply !== 'string') throw new Error('Invalid interview output: reply');
   if (typeof value.complete !== 'boolean') throw new Error('Invalid interview output: complete');
   if (!Array.isArray(value.changes)) throw new Error('Invalid interview output: changes');
+  value.changes.forEach((item, index) => {
+    if (typeof item !== 'string') throw new Error(`Invalid interview output: changes[${index}]`);
+  });
+
+  if (value.proposedProfileJson === null) {
+    value.proposedProfile = null;
+  } else if (typeof value.proposedProfileJson === 'string') {
+    if (!value.proposedProfileJson.trim()) {
+      value.proposedProfile = null;
+    } else {
+      value.proposedProfile = parseJsonObject(
+        value.proposedProfileJson,
+        'interview proposedProfileJson',
+      ) as unknown as Profile;
+    }
+  } else {
+    throw new Error('Invalid interview output: proposedProfileJson');
+  }
+  delete value.proposedProfileJson;
 }
 
 export function assertAnalyzeOutput(value: unknown): asserts value is {

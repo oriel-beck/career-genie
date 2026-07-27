@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { assertTailorOutput, tailorOutputSchema } from '../lib/schemas';
+import {
+  assertInterviewOutput,
+  assertTailorOutput,
+  interviewOutputSchema,
+  tailorOutputSchema,
+} from '../lib/schemas';
 
 test('tailorOutputSchema stays flat for Anthropic grammar limits', () => {
   assert.deepEqual(Object.keys(tailorOutputSchema.properties).sort(), [
@@ -10,6 +15,45 @@ test('tailorOutputSchema stays flat for Anthropic grammar limits', () => {
   ]);
   assert.equal(tailorOutputSchema.properties.resumeJson.type, 'string');
   assert.equal(tailorOutputSchema.properties.coverLetterJson.type, 'string');
+});
+
+test('interviewOutputSchema keeps proposed profile as a JSON string', () => {
+  assert.deepEqual(Object.keys(interviewOutputSchema.properties).sort(), [
+    'changes',
+    'complete',
+    'proposedProfileJson',
+    'reply',
+  ]);
+  assert.deepEqual(interviewOutputSchema.properties.proposedProfileJson.type, ['string', 'null']);
+});
+
+test('assertInterviewOutput parses proposedProfileJson', () => {
+  const profile = { id: 1, basics: { fullName: 'Ada', email: 'ada@example.com', links: [] }, roles: [], education: [], projects: [], skills: [], certifications: [], languages: [], updatedAt: 1 };
+  const raw: Record<string, unknown> = {
+    reply: 'What is your preferred title?',
+    proposedProfileJson: JSON.stringify(profile),
+    changes: ['Clarified headline'],
+    complete: false,
+  };
+
+  assertInterviewOutput(raw);
+
+  assert.equal('proposedProfileJson' in raw, false);
+  assert.equal(raw.proposedProfile?.basics.fullName, 'Ada');
+  assert.deepEqual(raw.changes, ['Clarified headline']);
+});
+
+test('assertInterviewOutput accepts null proposedProfileJson', () => {
+  const raw: Record<string, unknown> = {
+    reply: 'Tell me more about your role at MediMe.',
+    proposedProfileJson: null,
+    changes: [],
+    complete: false,
+  };
+
+  assertInterviewOutput(raw);
+
+  assert.equal(raw.proposedProfile, null);
 });
 
 test('assertTailorOutput parses JSON string payloads into app documents', () => {

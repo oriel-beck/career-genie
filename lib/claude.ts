@@ -143,7 +143,8 @@ export function interviewProfile(
     model,
     interviewOutputSchema,
     assertInterviewOutput,
-    `${TRUST_BOUNDARY} Ask concise questions that clarify the supplied profile. Propose only grounded changes.`,
+    `${TRUST_BOUNDARY} Ask concise questions that clarify the supplied profile. Propose only grounded changes. ` +
+      `proposedProfileJson must be null, or a JSON string of the full updated profile object (same shape as profile-data).`,
     [
       { role: ChatRole.User, content: xmlData('profile-data', profile) },
       ...turns.map((turn) => ({
