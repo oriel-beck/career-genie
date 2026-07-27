@@ -179,7 +179,7 @@ export default function DashboardPage() {
       <button>Save job</button>
     </form>}
     <Filters query={query} status={status} onQuery={setQuery} onStatus={setStatus} />
-    {visible.length ? <div className="job-list">{visible.map((job) => <JobCard key={job.id} job={job} />)}</div> :
+    {visible.length ? <div className="job-list">{visible.map((job) => <JobCard key={job.id} job={job} onDeleted={() => void refresh()} />)}</div> :
       <p className="card">No jobs match. Add a job above to get started.</p>}
   </section></AppShell>;
 }

@@ -765,7 +765,15 @@ button:disabled {
 }
 
 .job-card {
-  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.35rem 1rem;
+  padding: 0 1rem 0 0;
+}
+
+.job-card-details {
+  min-width: 0;
 }
 
 .job-card-summary {
@@ -773,9 +781,23 @@ button:disabled {
   grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1fr) auto;
   gap: 0.35rem 1rem;
   align-items: center;
-  padding: 0.7rem 1rem;
+  padding: 0.7rem 0 0.7rem 1rem;
   cursor: pointer;
   list-style: none;
+}
+
+.job-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+}
+
+.job-card-actions .button-link,
+.job-card-actions button {
+  white-space: nowrap;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.9rem;
 }
 
 .job-card-summary::-webkit-details-marker {
@@ -788,7 +810,7 @@ button:disabled {
   transition: transform 120ms ease;
 }
 
-.job-card[open] > .job-card-summary::before {
+.job-card-details[open] > .job-card-summary::before {
   transform: rotate(90deg);
 }
 
@@ -809,11 +831,15 @@ button:disabled {
 .job-card-body {
   display: grid;
   gap: 0.75rem;
-  padding: 0 1rem 1rem;
+  padding: 0 0 1rem 1rem;
   border-top: 1px solid var(--border);
 }
 
 @media (max-width: 720px) {
+  .job-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
   .job-card-summary {
     grid-template-columns: auto 1fr;
   }
@@ -821,6 +847,11 @@ button:disabled {
   .job-card-company,
   .job-card-summary .eyebrow {
     grid-column: 2;
+  }
+
+  .job-card-actions {
+    align-self: center;
+    margin-top: 0;
   }
 }
 
