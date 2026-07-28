@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useFeedback } from '@/components/feedback';
+import { HoverTooltip } from '@/components/hover-tooltip';
 import { MatchScore } from '@/components/match-score';
 import { db } from '@/lib/db';
 import type { Job } from '@/lib/types';
@@ -29,11 +30,15 @@ export function JobCard({ job, onDeleted }: { job: Job; onDeleted?: () => void }
     <div className="card job-card">
       <details className="job-card-details">
         <summary className="job-card-summary">
-          <span className="job-card-title">{job.title || 'Untitled job'}</span>
-          <span className="job-card-company">{job.company || 'Company not set'}</span>
+          <HoverTooltip className="job-card-title" label={job.title || 'Untitled job'} />
+          <HoverTooltip className="job-card-company" label={job.company || 'Company not set'} />
           <span className="eyebrow">{job.status} · <MatchScore score={job.matchScore} gaps={job.gaps} /></span>
         </summary>
         <div className="job-card-body">
+          <p className="job-card-expanded-heading">
+            <strong>{job.title || 'Untitled job'}</strong>
+            {job.company ? <span className="job-card-expanded-company"> · {job.company}</span> : null}
+          </p>
           <p className="prewrap">{job.description}</p>
         </div>
       </details>

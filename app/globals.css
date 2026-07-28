@@ -778,15 +778,19 @@ button:disabled {
   letter-spacing: 0.06em;
 }
 
-.match-score-tooltip {
+.hover-tooltip {
   position: relative;
-  cursor: help;
-  text-decoration: underline dotted;
-  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
-  text-underline-offset: 0.2em;
+  min-width: 0;
 }
 
-.match-score-tooltip-panel {
+.hover-tooltip-text {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hover-tooltip-panel {
   position: absolute;
   z-index: 30;
   right: 0;
@@ -811,11 +815,18 @@ button:disabled {
   transition: opacity 120ms ease, visibility 120ms ease;
 }
 
-.match-score-tooltip:hover .match-score-tooltip-panel,
-.match-score-tooltip:focus-visible .match-score-tooltip-panel,
-.match-score-tooltip:focus-within .match-score-tooltip-panel {
+.hover-tooltip:hover .hover-tooltip-panel,
+.hover-tooltip:focus-visible .hover-tooltip-panel,
+.hover-tooltip:focus-within .hover-tooltip-panel {
   visibility: visible;
   opacity: 1;
+}
+
+.match-score-tooltip {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  text-underline-offset: 0.2em;
 }
 
 .match-score-tooltip-title {
@@ -898,16 +909,10 @@ button:disabled {
 
 .job-card-title {
   font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .job-card-company {
   color: var(--muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .job-card-body {
@@ -917,6 +922,19 @@ button:disabled {
   gap: 0.75rem;
   padding: 0 0 1rem 1rem;
   border-top: 1px solid var(--border);
+}
+
+.job-card-expanded-heading {
+  margin: 0;
+  padding-top: 0.75rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.job-card-expanded-company {
+  color: var(--muted);
+  font-weight: 400;
 }
 
 @media (max-width: 720px) {
