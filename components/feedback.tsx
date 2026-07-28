@@ -48,9 +48,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<
     (ConfirmOptions & { resolve: (value: boolean) => void }) | null
   >(null);
-  const pendingRef = useRef(pending);
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
-  pendingRef.current = pending;
 
   const toast = useCallback((message: string, tone: ToastTone = 'info') => {
     if (tone === 'error' && isLockedKeyMessage(message)) {
@@ -71,8 +69,10 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const close = useCallback((value: boolean) => {
-    pendingRef.current?.resolve(value);
-    setPending(null);
+    setPending((current) => {
+      current?.resolve(value);
+      return null;
+    });
   }, []);
 
   useEffect(() => {

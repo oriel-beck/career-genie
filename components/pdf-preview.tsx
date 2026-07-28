@@ -33,24 +33,21 @@ export function PdfPreview({
   title: string;
   heading: string;
 }) {
-  const [url, setUrl] = useState<string | undefined>(undefined);
+  const [preview, setPreview] = useState<
+    { document: ReactElement<DocumentProps>; url: string } | undefined
+  >(undefined);
   const urlRef = useRef<string | undefined>(undefined);
+  const url = preview?.document === document ? preview.url : undefined;
 
   useEffect(() => {
     let cancelled = false;
 
-    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    urlRef.current = undefined;
-    setUrl(undefined);
-
     void pdf(document).toBlob().then((blob) => {
+      if (cancelled) return;
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       const nextUrl = URL.createObjectURL(blob);
-      if (cancelled) {
-        URL.revokeObjectURL(nextUrl);
-      } else {
-        urlRef.current = nextUrl;
-        setUrl(nextUrl);
-      }
+      urlRef.current = nextUrl;
+      setPreview({ document, url: nextUrl });
     });
 
     return () => {
