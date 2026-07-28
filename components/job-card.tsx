@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useFeedback } from '@/components/feedback';
+import { MatchScore } from '@/components/match-score';
 import { db } from '@/lib/db';
 import type { Job } from '@/lib/types';
 
@@ -30,7 +31,7 @@ export function JobCard({ job, onDeleted }: { job: Job; onDeleted?: () => void }
         <summary className="job-card-summary">
           <span className="job-card-title">{job.title || 'Untitled job'}</span>
           <span className="job-card-company">{job.company || 'Company not set'}</span>
-          <span className="eyebrow">{job.status} · {job.matchScore}%</span>
+          <span className="eyebrow">{job.status} · <MatchScore score={job.matchScore} gaps={job.gaps} /></span>
         </summary>
         <div className="job-card-body">
           <p className="prewrap">{job.description}</p>

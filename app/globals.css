@@ -778,6 +778,65 @@ button:disabled {
   letter-spacing: 0.06em;
 }
 
+.match-score-tooltip {
+  position: relative;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  text-underline-offset: 0.2em;
+}
+
+.match-score-tooltip-panel {
+  position: absolute;
+  z-index: 30;
+  right: 0;
+  bottom: calc(100% + 0.45rem);
+  width: min(18rem, 70vw);
+  padding: 0.65rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--surface-strong);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.45;
+  text-align: left;
+  text-transform: none;
+  white-space: normal;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease, visibility 120ms ease;
+}
+
+.match-score-tooltip:hover .match-score-tooltip-panel,
+.match-score-tooltip:focus-visible .match-score-tooltip-panel,
+.match-score-tooltip:focus-within .match-score-tooltip-panel {
+  visibility: visible;
+  opacity: 1;
+}
+
+.match-score-tooltip-title {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.match-score-tooltip-list {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.match-score-tooltip-list li + li {
+  margin-top: 0.25rem;
+}
+
 .job-list {
   display: grid;
   gap: 0.4rem;
