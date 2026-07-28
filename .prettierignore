@@ -1,0 +1,13 @@
+.next/
+node_modules/
+out/
+build/
+dist/
+coverage/
+blob-report/
+playwright-report/
+test-results/
+career-genie/
+career-genie-vault/
+package-lock.json
+next-env.d.ts
