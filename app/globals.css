@@ -883,37 +883,36 @@ button:disabled {
 }
 
 .job-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas:
-    'summary actions'
-    'body body';
-  align-items: center;
-  gap: 0.35rem 1rem;
-  padding: 0 1rem 0 0;
+  padding: 0;
 }
 
 .job-card-details {
-  display: contents;
+  min-width: 0;
 }
 
 .job-card-summary {
-  grid-area: summary;
   display: grid;
-  grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.35rem 1rem;
   align-items: center;
-  padding: 0.7rem 0 0.7rem 1rem;
+  padding: 0.7rem 1rem;
   cursor: pointer;
   list-style: none;
 }
 
+.job-card-summary-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 0.35rem 1rem;
+  align-items: center;
+  min-width: 0;
+}
+
 .job-card-actions {
-  grid-area: actions;
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-  align-self: center;
+  justify-content: flex-end;
 }
 
 .job-card-actions .button-link,
@@ -946,10 +945,9 @@ button:disabled {
 }
 
 .job-card-body {
-  grid-area: body;
   display: grid;
   gap: 0.75rem;
-  padding: 0 1rem 1rem 1rem;
+  padding: 0 1rem 1rem;
   border-top: 1px solid var(--border);
 }
 
@@ -967,21 +965,22 @@ button:disabled {
 }
 
 @media (max-width: 720px) {
-  .job-card {
-    grid-template-columns: minmax(0, 1fr) auto;
+  .job-card-summary {
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .job-card-summary {
+  .job-card-summary-main {
     grid-template-columns: auto 1fr;
   }
 
-  .job-card-company,
-  .job-card-summary .eyebrow {
-    grid-column: 2;
+  .job-card-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 
-  .job-card-actions {
-    align-self: center;
+  .job-card-company,
+  .job-card-summary-main .eyebrow {
+    grid-column: 2;
   }
 }
 

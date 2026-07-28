@@ -30,11 +30,25 @@ export function JobCard({ job, onDeleted }: { job: Job; onDeleted?: () => void }
     <div className="card job-card">
       <details className="job-card-details">
         <summary className="job-card-summary">
-          <HoverTooltip className="job-card-title" label={job.title || 'Untitled job'} />
-          <HoverTooltip className="job-card-company" label={job.company || 'Company not set'} />
-          <span className="eyebrow">
-            {job.status} · <MatchScore score={job.matchScore} gaps={job.gaps} />
+          <span className="job-card-summary-main">
+            <HoverTooltip className="job-card-title" label={job.title || 'Untitled job'} />
+            <HoverTooltip className="job-card-company" label={job.company || 'Company not set'} />
+            <span className="eyebrow">
+              {job.status} · <MatchScore score={job.matchScore} gaps={job.gaps} />
+            </span>
           </span>
+          <div
+            className="job-card-actions"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            <Link className="button-link" href={`/jobs/${job.id}`}>
+              Review job
+            </Link>
+            <button type="button" className="secondary danger" onClick={() => void removeJob()}>
+              Delete
+            </button>
+          </div>
         </summary>
         <div className="job-card-body">
           <p className="job-card-expanded-heading">
@@ -46,14 +60,6 @@ export function JobCard({ job, onDeleted }: { job: Job; onDeleted?: () => void }
           <p className="prewrap">{job.description}</p>
         </div>
       </details>
-      <div className="job-card-actions">
-        <Link className="button-link" href={`/jobs/${job.id}`}>
-          Review job
-        </Link>
-        <button type="button" className="secondary danger" onClick={() => void removeJob()}>
-          Delete
-        </button>
-      </div>
     </div>
   );
 }
