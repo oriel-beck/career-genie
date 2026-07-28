@@ -42,13 +42,15 @@ export function PdfPreview({
   useEffect(() => {
     let cancelled = false;
 
-    void pdf(document).toBlob().then((blob) => {
-      if (cancelled) return;
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-      const nextUrl = URL.createObjectURL(blob);
-      urlRef.current = nextUrl;
-      setPreview({ document, url: nextUrl });
-    });
+    void pdf(document)
+      .toBlob()
+      .then((blob) => {
+        if (cancelled) return;
+        if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+        const nextUrl = URL.createObjectURL(blob);
+        urlRef.current = nextUrl;
+        setPreview({ document, url: nextUrl });
+      });
 
     return () => {
       cancelled = true;
@@ -79,7 +81,9 @@ export function PdfPreview({
           <span className="loader-spinner" aria-hidden="true" />
           <div className="loader-copy">
             <p className="loader-title">Preparing PDF</p>
-            <p className="loader-hint">Rendering {title.toLowerCase()}. This usually takes a few seconds.</p>
+            <p className="loader-hint">
+              Rendering {title.toLowerCase()}. This usually takes a few seconds.
+            </p>
           </div>
         </div>
       ) : (

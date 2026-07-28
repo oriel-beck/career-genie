@@ -1,8 +1,4 @@
-import {
-  fetchPublicJob,
-  SafeFetchError,
-  SafeFetchErrorKind,
-} from '@/lib/safe-fetch';
+import { fetchPublicJob, SafeFetchError, SafeFetchErrorKind } from '@/lib/safe-fetch';
 
 export const runtime = 'nodejs';
 

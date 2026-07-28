@@ -34,9 +34,21 @@ export function ProfileEditor({
   return (
     <form className="stack" onSubmit={submit}>
       <label htmlFor="profile-json">Profile details</label>
-      <p className="hint">Edit every profile field here. IDs keep your approved experience linked to future AI changes.</p>
-      <textarea id="profile-json" value={value} onChange={(event) => setValue(event.target.value)} rows={18} spellCheck={false} aria-describedby="profile-error" />
-      <p id="profile-error" className="field-error" aria-live="polite">{error}</p>
+      <p className="hint">
+        Edit every profile field here. IDs keep your approved experience linked to future AI
+        changes.
+      </p>
+      <textarea
+        id="profile-json"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        rows={18}
+        spellCheck={false}
+        aria-describedby="profile-error"
+      />
+      <p id="profile-error" className="field-error" aria-live="polite">
+        {error}
+      </p>
       <button type="submit">{submitLabel}</button>
     </form>
   );

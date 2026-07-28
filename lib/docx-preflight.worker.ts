@@ -10,14 +10,20 @@ function isZip64(bytes: Uint8Array): boolean {
       bytes[index + 1] === 0x4b &&
       ((bytes[index + 2] === 0x06 && bytes[index + 3] === 0x06) ||
         (bytes[index + 2] === 0x06 && bytes[index + 3] === 0x07))
-    ) return true;
+    )
+      return true;
   }
   return false;
 }
 
 function unsafePath(name: string): boolean {
-  return name.includes('\0') || name.startsWith('/') || name.startsWith('\\') ||
-    /^[a-zA-Z]:/.test(name) || name.replaceAll('\\', '/').split('/').includes('..');
+  return (
+    name.includes('\0') ||
+    name.startsWith('/') ||
+    name.startsWith('\\') ||
+    /^[a-zA-Z]:/.test(name) ||
+    name.replaceAll('\\', '/').split('/').includes('..')
+  );
 }
 
 export function preflightDocx(bytes: Uint8Array): void {
@@ -56,7 +62,8 @@ export function preflightDocx(bytes: Uint8Array): void {
     fail('DOCX is malformed');
   }
   if (failure) throw failure;
-  if (!entries || !hasContentTypes || !hasDocument) throw new Error('DOCX is missing required files');
+  if (!entries || !hasContentTypes || !hasDocument)
+    throw new Error('DOCX is missing required files');
 }
 
 type WorkerRequest = { bytes: ArrayBuffer };

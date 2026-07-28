@@ -73,9 +73,7 @@ const tailoring = {
     ],
     education: [],
     projects: [],
-    skills: [
-      { text: 'TypeScript', sourceIds: ['skill-1'], userEdited: false },
-    ],
+    skills: [{ text: 'TypeScript', sourceIds: ['skill-1'], userEdited: false }],
     certifications: [],
     languages: [],
   },
@@ -112,8 +110,7 @@ async function seed(page: Page): Promise<void> {
           }
           const transaction = db.transaction(['profiles', 'settings'], 'readwrite');
           transaction.oncomplete = () => resolve();
-          transaction.onerror = () =>
-            reject(transaction.error ?? new Error('tx failed'));
+          transaction.onerror = () => reject(transaction.error ?? new Error('tx failed'));
           transaction.objectStore('profiles').put(savedProfile);
           transaction.objectStore('settings').put({
             id: 1,
@@ -180,9 +177,7 @@ test('creates, filters, versions, and downloads a tailored job', async ({ page }
   await expect(page.getByRole('button', { name: /v2 · ai/ })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Open in new tab' })).toHaveCount(2);
   await page.getByRole('button', { name: 'Download resume PDF' }).click();
-  await expect(
-    page.getByRole('button', { name: 'Download cover letter PDF' }),
-  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Download cover letter PDF' })).toBeVisible();
 });
 
 test('shows a safe refusal state', async ({ page }) => {
@@ -196,8 +191,7 @@ test('shows a safe refusal state', async ({ page }) => {
         request.onsuccess = () => {
           const transaction = request.result.transaction('jobs', 'readwrite');
           transaction.oncomplete = () => resolve();
-          transaction.onerror = () =>
-            reject(transaction.error ?? new Error('tx failed'));
+          transaction.onerror = () => reject(transaction.error ?? new Error('tx failed'));
           transaction.objectStore('jobs').put({
             id: 'job-refusal',
             title: 'Role',

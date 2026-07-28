@@ -2,10 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import {
-  collectProfileSourceIds,
-  validateGenerationGrounding,
-} from '../lib/grounding';
+import { collectProfileSourceIds, validateGenerationGrounding } from '../lib/grounding';
 import { extractJobText } from '../lib/job-text';
 import type { CoverLetterDocument, Profile, ResumeDocument } from '../lib/types';
 
@@ -99,10 +96,7 @@ test('collectProfileSourceIds gathers claim and entity ids', () => {
 });
 
 test('accepts grounded AI output matching profile metadata', () => {
-  assert.deepEqual(
-    validateGenerationGrounding(profile, baseResume(), baseCover()),
-    [],
-  );
+  assert.deepEqual(validateGenerationGrounding(profile, baseResume(), baseCover()), []);
 });
 
 test('rejects empty and foreign source ids on AI blocks', () => {
@@ -126,8 +120,8 @@ test('rejects metadata that differs from referenced profile entities', () => {
   const resume = baseResume();
   resume.roles[0]!.company = 'Not Northwind';
   assert.ok(
-    validateGenerationGrounding(profile, resume, baseCover()).some(
-      (error) => error.path.includes('company'),
+    validateGenerationGrounding(profile, resume, baseCover()).some((error) =>
+      error.path.includes('company'),
     ),
   );
 });
@@ -135,10 +129,7 @@ test('rejects metadata that differs from referenced profile entities', () => {
 test('allows explicitly user-edited text blocks without sources', () => {
   const resume = baseResume();
   resume.skills = [{ text: 'Edited skill', sourceIds: [], userEdited: true }];
-  assert.deepEqual(
-    validateGenerationGrounding(profile, resume, baseCover()),
-    [],
-  );
+  assert.deepEqual(validateGenerationGrounding(profile, resume, baseCover()), []);
 });
 
 test('job extraction returns collapsed plain text and never markup', () => {
@@ -148,13 +139,29 @@ test('job extraction returns collapsed plain text and never markup', () => {
       const removed = new Set<unknown>();
       const title = html.match(/<title>(.*?)<\/title>/i)?.[1] ?? '';
       const nodes = [
-        { selector: 'script', textContent: 'x()', remove() { removed.add(this); } },
-        { selector: 'nav', textContent: 'Careers Login', remove() { removed.add(this); } },
+        {
+          selector: 'script',
+          textContent: 'x()',
+          remove() {
+            removed.add(this);
+          },
+        },
+        {
+          selector: 'nav',
+          textContent: 'Careers Login',
+          remove() {
+            removed.add(this);
+          },
+        },
       ];
       const mainText = 'Engineer Build things';
       return {
         querySelectorAll: (selector: string) =>
-          nodes.filter((node) => selector.split(',').some((part) => part.trim() === node.selector || part.includes(node.selector))),
+          nodes.filter((node) =>
+            selector
+              .split(',')
+              .some((part) => part.trim() === node.selector || part.includes(node.selector)),
+          ),
         querySelector: (selector: string) => {
           if (selector === 'title') return { textContent: title };
           if (selector.includes('main')) return { textContent: mainText };
@@ -162,7 +169,9 @@ test('job extraction returns collapsed plain text and never markup', () => {
         },
         body: {
           get textContent() {
-            const scriptsGone = ![...removed].some((node) => (node as { selector: string }).selector === 'script');
+            const scriptsGone = ![...removed].some(
+              (node) => (node as { selector: string }).selector === 'script',
+            );
             return scriptsGone ? mainText : `x() ${mainText}`;
           },
         },

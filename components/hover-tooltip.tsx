@@ -2,13 +2,7 @@
 
 import { useId, type KeyboardEvent, type MouseEvent } from 'react';
 
-export function HoverTooltip({
-  label,
-  className,
-}: {
-  label: string;
-  className?: string;
-}) {
+export function HoverTooltip({ label, className }: { label: string; className?: string }) {
   const tooltipId = useId();
 
   function stopToggle(event: MouseEvent | KeyboardEvent) {

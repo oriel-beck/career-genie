@@ -21,7 +21,9 @@ export function MatchScore({ score, gaps }: { score: number; gaps: string[] }) {
       <span className="hover-tooltip-panel" id={tooltipId} role="tooltip">
         <span className="match-score-tooltip-title">Gaps vs your profile</span>
         <ul className="match-score-tooltip-list">
-          {gaps.map((gap) => <li key={gap}>{gap}</li>)}
+          {gaps.map((gap) => (
+            <li key={gap}>{gap}</li>
+          ))}
         </ul>
       </span>
     </span>

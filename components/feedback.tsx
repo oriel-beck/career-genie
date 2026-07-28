@@ -117,11 +117,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
         ))}
       </div>
       {pending ? (
-        <div
-          className="dialog-backdrop"
-          role="presentation"
-          onClick={() => close(false)}
-        >
+        <div className="dialog-backdrop" role="presentation" onClick={() => close(false)}>
           <div
             className="dialog"
             role="alertdialog"
@@ -149,11 +145,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
         </div>
       ) : null}
       {unlockOpen ? (
-        <div
-          className="dialog-backdrop"
-          role="presentation"
-          onClick={() => setUnlockOpen(false)}
-        >
+        <div className="dialog-backdrop" role="presentation" onClick={() => setUnlockOpen(false)}>
           <div
             className="dialog"
             role="dialog"
@@ -163,7 +155,9 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
             onClick={(event) => event.stopPropagation()}
           >
             <h2 id="unlock-title">Unlock API key</h2>
-            <p id="unlock-message">Your encrypted key is locked. Enter your passphrase to continue.</p>
+            <p id="unlock-message">
+              Your encrypted key is locked. Enter your passphrase to continue.
+            </p>
             <UnlockKeyForm
               id="dialog-unlock-passphrase"
               onUnlocked={() => {

@@ -14,20 +14,29 @@ export function Filters({
   onQuery: (value: string) => void;
   onStatus: (value: '' | JobStatusValue) => void;
 }) {
-  return <div className="filters">
-    <label htmlFor="job-search">Search jobs
-      <input id="job-search" value={query} onChange={(event) => onQuery(event.target.value)} placeholder="Title or company" />
-    </label>
-    <label htmlFor="job-status-filter">Status
-      <Select
-        id="job-status-filter"
-        value={status}
-        onChange={(value) => onStatus(value as '' | JobStatusValue)}
-        options={[
-          { value: '', label: 'All statuses' },
-          ...Object.values(JobStatus).map((value) => ({ value, label: value })),
-        ]}
-      />
-    </label>
-  </div>;
+  return (
+    <div className="filters">
+      <label htmlFor="job-search">
+        Search jobs
+        <input
+          id="job-search"
+          value={query}
+          onChange={(event) => onQuery(event.target.value)}
+          placeholder="Title or company"
+        />
+      </label>
+      <label htmlFor="job-status-filter">
+        Status
+        <Select
+          id="job-status-filter"
+          value={status}
+          onChange={(value) => onStatus(value as '' | JobStatusValue)}
+          options={[
+            { value: '', label: 'All statuses' },
+            ...Object.values(JobStatus).map((value) => ({ value, label: value })),
+          ]}
+        />
+      </label>
+    </div>
+  );
 }

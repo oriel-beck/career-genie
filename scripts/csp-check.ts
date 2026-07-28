@@ -23,8 +23,15 @@ function checkCsp(value: string | null): string {
   if (!value) throw new Error('Missing Content-Security-Policy header.');
   const nonce = value.match(/script-src 'self' 'nonce-([^']+)' 'strict-dynamic'/)?.[1];
   if (!nonce) throw new Error('Missing script nonce in CSP.');
-  const normalized = value.replaceAll(`'nonce-${nonce}'`, "'nonce-{NONCE}'").split(';').map((part) => part.trim()).filter(Boolean);
-  if (normalized.length !== expected.length || normalized.some((part, index) => part !== expected[index])) {
+  const normalized = value
+    .replaceAll(`'nonce-${nonce}'`, "'nonce-{NONCE}'")
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (
+    normalized.length !== expected.length ||
+    normalized.some((part, index) => part !== expected[index])
+  ) {
     throw new Error(`Unexpected CSP: ${value}`);
   }
   return nonce;
@@ -35,8 +42,12 @@ async function headers(baseUrl: string): Promise<[string, string]> {
     fetch(new URL('/', baseUrl)),
     fetch(new URL('/onboarding', baseUrl)),
   ]);
-  if (!one.ok || !two.ok) throw new Error(`Expected pages to load (got ${one.status} and ${two.status}).`);
-  return [checkCsp(one.headers.get('content-security-policy')), checkCsp(two.headers.get('content-security-policy'))];
+  if (!one.ok || !two.ok)
+    throw new Error(`Expected pages to load (got ${one.status} and ${two.status}).`);
+  return [
+    checkCsp(one.headers.get('content-security-policy')),
+    checkCsp(two.headers.get('content-security-policy')),
+  ];
 }
 
 async function waitForServer(): Promise<void> {

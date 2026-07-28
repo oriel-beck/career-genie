@@ -1,9 +1,4 @@
-import type {
-  CoverLetterDocument,
-  GroundedText,
-  Profile,
-  ResumeDocument,
-} from './types';
+import type { CoverLetterDocument, GroundedText, Profile, ResumeDocument } from './types';
 import { GenerationOrigin } from './types';
 
 export function collectProfileSourceIds(profile: Profile): Set<string> {

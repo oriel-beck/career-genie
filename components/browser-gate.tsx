@@ -48,8 +48,8 @@ export function BrowserGate({ children }: { children: ReactNode }) {
     <main className="gate" aria-labelledby="unsupported-title">
       <h1 id="unsupported-title">This browser is not supported</h1>
       <p>
-        Career Genie requires a current desktop Chromium browser because your
-        private data stays on this device.
+        Career Genie requires a current desktop Chromium browser because your private data stays on
+        this device.
       </p>
       <p>Use the latest desktop Chrome or Microsoft Edge, then try again.</p>
       <h2>Missing capabilities</h2>

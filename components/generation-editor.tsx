@@ -18,7 +18,11 @@ export function GenerationEditor({ generation }: { generation: Generation }) {
   const resume = generation.resume;
   const cover = generation.coverLetter;
 
-  async function download(name: string, content: ReactElement<DocumentProps>, kind: 'resume' | 'cover') {
+  async function download(
+    name: string,
+    content: ReactElement<DocumentProps>,
+    kind: 'resume' | 'cover',
+  ) {
     setPdfBusy(kind);
     try {
       const blob = await pdf(content).toBlob();
@@ -44,7 +48,9 @@ export function GenerationEditor({ generation }: { generation: Generation }) {
       if (!folderHandle) {
         const picker = (
           window as unknown as {
-            showDirectoryPicker: (options: { mode: 'readwrite' }) => Promise<FileSystemDirectoryHandle>;
+            showDirectoryPicker: (options: {
+              mode: 'readwrite';
+            }) => Promise<FileSystemDirectoryHandle>;
           }
         ).showDirectoryPicker;
         folderHandle = await picker({ mode: 'readwrite' });
@@ -64,7 +70,10 @@ export function GenerationEditor({ generation }: { generation: Generation }) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         toast('Folder selection was cancelled.', 'info');
       } else {
-        toast(error instanceof Error ? error.message : 'Could not save PDFs to the folder.', 'error');
+        toast(
+          error instanceof Error ? error.message : 'Could not save PDFs to the folder.',
+          'error',
+        );
       }
     } finally {
       setPdfBusy(null);
@@ -74,18 +83,20 @@ export function GenerationEditor({ generation }: { generation: Generation }) {
   return (
     <section className="stack generation-editor">
       <div className="button-row">
-        <button
-          type="button"
-          disabled={pdfBusy !== null}
-          onClick={() => void saveBothToFolder()}
-        >
+        <button type="button" disabled={pdfBusy !== null} onClick={() => void saveBothToFolder()}>
           {pdfBusy === 'folder' ? 'Saving PDFs…' : 'Save both PDFs to folder'}
         </button>
         <button
           type="button"
           className="secondary"
           disabled={pdfBusy !== null}
-          onClick={() => void download(`resume-v${generation.version}.pdf`, <ResumePdf document={resume} />, 'resume')}
+          onClick={() =>
+            void download(
+              `resume-v${generation.version}.pdf`,
+              <ResumePdf document={resume} />,
+              'resume',
+            )
+          }
         >
           {pdfBusy === 'resume' ? 'Preparing resume PDF…' : 'Download resume PDF'}
         </button>
@@ -93,7 +104,13 @@ export function GenerationEditor({ generation }: { generation: Generation }) {
           type="button"
           className="secondary"
           disabled={pdfBusy !== null}
-          onClick={() => void download(`cover-letter-v${generation.version}.pdf`, <CoverLetterPdf document={cover} />, 'cover')}
+          onClick={() =>
+            void download(
+              `cover-letter-v${generation.version}.pdf`,
+              <CoverLetterPdf document={cover} />,
+              'cover',
+            )
+          }
         >
           {pdfBusy === 'cover' ? 'Preparing cover letter PDF…' : 'Download cover letter PDF'}
         </button>

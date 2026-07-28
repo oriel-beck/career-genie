@@ -32,7 +32,9 @@ export interface ModelChoice {
   tailor: string;
 }
 
-export interface Supported { supported: boolean }
+export interface Supported {
+  supported: boolean;
+}
 export interface ModelInfo {
   id: string;
   display_name: string;
@@ -78,8 +80,15 @@ export interface Settings {
 // No persisted field named `apiKey`. Only lib/keys.ts may read encryptedKey or
 // plaintextKey. keyHint contains exactly the last four characters.
 
-export interface Link { id: string; label: string; url: string }
-export interface ProfileClaim { id: string; text: string }
+export interface Link {
+  id: string;
+  label: string;
+  url: string;
+}
+export interface ProfileClaim {
+  id: string;
+  text: string;
+}
 export interface WorkExperience {
   id: string;
   company: string;

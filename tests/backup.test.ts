@@ -19,8 +19,13 @@ async function signed(overrides: Record<string, unknown> = {}) {
     preferences: { models: {} },
     ...overrides,
   };
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(payload)));
-  const checksumSha256 = [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(JSON.stringify(payload)),
+  );
+  const checksumSha256 = [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
   return { ...payload, checksumSha256 };
 }
 
@@ -34,10 +39,21 @@ test('rejects damaged checksums, limits, and dangling generations', async () => 
   const damaged = await signed();
   damaged.checksumSha256 = '0'.repeat(64);
   await assert.rejects(validateBackup(damaged), BackupError);
-  await assert.rejects(validateBackup(await signed({ jobs: Array(BackupLimits.MaxJobs + 1).fill(null) })), BackupError);
+  await assert.rejects(
+    validateBackup(await signed({ jobs: Array(BackupLimits.MaxJobs + 1).fill(null) })),
+    BackupError,
+  );
   const generation = {
-    id: 'generation-1', jobId: 'missing', version: 1, templateVersion: 1, origin: GenerationOrigin.Ai,
-    resume: {}, coverLetter: {}, changeSummary: [], modelUsed: 'model', createdAt: 1,
+    id: 'generation-1',
+    jobId: 'missing',
+    version: 1,
+    templateVersion: 1,
+    origin: GenerationOrigin.Ai,
+    resume: {},
+    coverLetter: {},
+    changeSummary: [],
+    modelUsed: 'model',
+    createdAt: 1,
   };
   await assert.rejects(validateBackup(await signed({ generations: [generation] })), BackupError);
 });

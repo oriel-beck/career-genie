@@ -29,7 +29,17 @@ test('interviewOutputSchema keeps proposed profile as a JSON string', () => {
 });
 
 test('assertInterviewOutput parses proposedProfileJson', () => {
-  const profile = { id: 1, basics: { fullName: 'Ada', email: 'ada@example.com', links: [] }, roles: [], education: [], projects: [], skills: [], certifications: [], languages: [], updatedAt: 1 };
+  const profile = {
+    id: 1,
+    basics: { fullName: 'Ada', email: 'ada@example.com', links: [] },
+    roles: [],
+    education: [],
+    projects: [],
+    skills: [],
+    certifications: [],
+    languages: [],
+    updatedAt: 1,
+  };
   const raw: Record<string, unknown> = {
     reply: 'A few clarifying questions before I propose changes:',
     questions: ['What is your preferred title?'],
@@ -70,22 +80,26 @@ test('assertTailorOutput parses JSON string payloads into app documents', () => 
     },
     headline: { text: 'Engineer', sourceIds: ['headline-1'] },
     summary: { text: 'Builder', sourceIds: ['summary-1', 'role-1'] },
-    roles: [{
-      sourceRoleId: 'role-1',
-      company: 'Analytical Engine Co',
-      title: 'Engineer',
-      location: '',
-      dateRange: '1842 – Present',
-      bullets: [{ text: 'Wrote programs', sourceIds: ['bullet-1'] }],
-    }],
+    roles: [
+      {
+        sourceRoleId: 'role-1',
+        company: 'Analytical Engine Co',
+        title: 'Engineer',
+        location: '',
+        dateRange: '1842 – Present',
+        bullets: [{ text: 'Wrote programs', sourceIds: ['bullet-1'] }],
+      },
+    ],
     education: [],
-    projects: [{
-      sourceProjectId: 'proj-1',
-      name: 'Notes',
-      url: '',
-      description: { text: 'Research notes', sourceIds: ['proj-desc-1'] },
-      bullets: [{ text: 'Published algorithms', sourceIds: ['proj-bullet-1'] }],
-    }],
+    projects: [
+      {
+        sourceProjectId: 'proj-1',
+        name: 'Notes',
+        url: '',
+        description: { text: 'Research notes', sourceIds: ['proj-desc-1'] },
+        bullets: [{ text: 'Published algorithms', sourceIds: ['proj-bullet-1'] }],
+      },
+    ],
     skills: [{ text: 'Mathematics', sourceIds: ['skill-1'] }],
     certifications: [],
     languages: [{ text: 'English', sourceIds: ['lang-1'] }],

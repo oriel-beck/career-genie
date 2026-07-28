@@ -25,13 +25,7 @@ const DESIRED_EFFORT: Record<CallKind, Effort> = {
   [CallKind.Tailor]: Effort.High,
 };
 
-const EFFORT_ORDER: Effort[] = [
-  Effort.Low,
-  Effort.Medium,
-  Effort.High,
-  Effort.Xhigh,
-  Effort.Max,
-];
+const EFFORT_ORDER: Effort[] = [Effort.Low, Effort.Medium, Effort.High, Effort.Xhigh, Effort.Max];
 
 /** Live-catalog family preference per task (no hardcoded model IDs). */
 const ModelFamily = {
@@ -47,7 +41,12 @@ const PREFERRED_FAMILIES: Record<CallKind, readonly ModelFamily[]> = {
   // Structured PDF/DOCX extraction — Haiku is built for fast extraction.
   [CallKind.Parse]: [ModelFamily.Haiku, ModelFamily.Sonnet, ModelFamily.Opus, ModelFamily.Fable],
   // Conversational gap-filling — Sonnet for dialogue quality at medium effort.
-  [CallKind.Interview]: [ModelFamily.Sonnet, ModelFamily.Opus, ModelFamily.Fable, ModelFamily.Haiku],
+  [CallKind.Interview]: [
+    ModelFamily.Sonnet,
+    ModelFamily.Opus,
+    ModelFamily.Fable,
+    ModelFamily.Haiku,
+  ],
   // Noisy page cleanup + match judgment — Sonnet; Haiku is a solid extraction fallback.
   [CallKind.Analyze]: [ModelFamily.Sonnet, ModelFamily.Haiku, ModelFamily.Opus, ModelFamily.Fable],
   // Grounded resume/cover rewrite — Sonnet is the production writing default; Opus if absent.
@@ -102,7 +101,8 @@ function rankForKind(kind: CallKind, a: ModelInfo, b: ModelInfo): number {
   const effortDelta = effortScore(b) - effortScore(a);
   if (effortDelta) return effortDelta;
   const tokenDelta =
-    Math.min(b.max_tokens, DESIRED_MAX_TOKENS[kind]) - Math.min(a.max_tokens, DESIRED_MAX_TOKENS[kind]);
+    Math.min(b.max_tokens, DESIRED_MAX_TOKENS[kind]) -
+    Math.min(a.max_tokens, DESIRED_MAX_TOKENS[kind]);
   if (tokenDelta) return tokenDelta;
   return compareVersionDesc(a.id, b.id);
 }

@@ -12,10 +12,20 @@ import { parseResume } from '@/lib/parse-resume';
 import { persistStorage } from '@/lib/storage';
 import { CallKind, type ModelInfo, type Profile, type Settings } from '@/lib/types';
 
-function id() { return crypto.randomUUID(); }
-function claim(text: string) { return { id: id(), text }; }
-function optional(value: unknown): string | undefined { return typeof value === 'string' && value ? value : undefined; }
-function strings(value: unknown): string[] { return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : []; }
+function id() {
+  return crypto.randomUUID();
+}
+function claim(text: string) {
+  return { id: id(), text };
+}
+function optional(value: unknown): string | undefined {
+  return typeof value === 'string' && value ? value : undefined;
+}
+function strings(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
 
 function hydrateProfile(raw: Record<string, unknown>): Profile {
   const basics = raw.basics as Record<string, unknown>;
@@ -26,24 +36,49 @@ function hydrateProfile(raw: Record<string, unknown>): Profile {
       email: String(basics?.email ?? ''),
       phone: optional(basics?.phone),
       location: optional(basics?.location),
-      links: Array.isArray(basics?.links) ? basics.links.map((link) => {
-        const item = link as Record<string, unknown>;
-        return { id: id(), label: String(item.label ?? ''), url: String(item.url ?? '') };
-      }) : [],
+      links: Array.isArray(basics?.links)
+        ? basics.links.map((link) => {
+            const item = link as Record<string, unknown>;
+            return { id: id(), label: String(item.label ?? ''), url: String(item.url ?? '') };
+          })
+        : [],
     },
     headline: optional(raw.headline) ? claim(String(raw.headline)) : undefined,
     summary: optional(raw.summary) ? claim(String(raw.summary)) : undefined,
     roles: (Array.isArray(raw.roles) ? raw.roles : []).map((role) => {
       const item = role as Record<string, unknown>;
-      return { id: id(), company: String(item.company ?? ''), title: String(item.title ?? ''), location: optional(item.location), startDate: String(item.startDate ?? ''), endDate: optional(item.endDate), current: item.current === true, bullets: strings(item.bullets).map(claim) };
+      return {
+        id: id(),
+        company: String(item.company ?? ''),
+        title: String(item.title ?? ''),
+        location: optional(item.location),
+        startDate: String(item.startDate ?? ''),
+        endDate: optional(item.endDate),
+        current: item.current === true,
+        bullets: strings(item.bullets).map(claim),
+      };
     }),
     education: (Array.isArray(raw.education) ? raw.education : []).map((education) => {
       const item = education as Record<string, unknown>;
-      return { id: id(), institution: String(item.institution ?? ''), qualification: String(item.qualification ?? ''), field: optional(item.field), startDate: optional(item.startDate), endDate: optional(item.endDate), details: strings(item.details).map(claim) };
+      return {
+        id: id(),
+        institution: String(item.institution ?? ''),
+        qualification: String(item.qualification ?? ''),
+        field: optional(item.field),
+        startDate: optional(item.startDate),
+        endDate: optional(item.endDate),
+        details: strings(item.details).map(claim),
+      };
     }),
     projects: (Array.isArray(raw.projects) ? raw.projects : []).map((project) => {
       const item = project as Record<string, unknown>;
-      return { id: id(), name: String(item.name ?? ''), url: optional(item.url), description: claim(String(item.description ?? '')), bullets: strings(item.bullets).map(claim) };
+      return {
+        id: id(),
+        name: String(item.name ?? ''),
+        url: optional(item.url),
+        description: claim(String(item.description ?? '')),
+        bullets: strings(item.bullets).map(claim),
+      };
     }),
     skills: strings(raw.skills).map(claim),
     certifications: strings(raw.certifications).map(claim),
@@ -61,7 +96,9 @@ export default function OnboardingPage() {
   const [editing, setEditing] = useState<Profile>();
   const [parsing, setParsing] = useState(false);
 
-  const ready = Boolean(settings?.keyHint && settings.models[CallKind.Parse] && settings.models[CallKind.Interview]);
+  const ready = Boolean(
+    settings?.keyHint && settings.models[CallKind.Parse] && settings.models[CallKind.Interview],
+  );
 
   useEffect(() => {
     void (async () => {
@@ -114,22 +151,36 @@ export default function OnboardingPage() {
     <AppShell>
       <section className="page stack">
         <h1>Profile</h1>
-        <p>Your original resume file is never saved. Before parsing, its content goes directly from your browser to Anthropic using your key.</p>
+        <p>
+          Your original resume file is never saved. Before parsing, its content goes directly from
+          your browser to Anthropic using your key.
+        </p>
         {!ready && (
           <section className="card stack">
             <h2>API key and models</h2>
-            <p>Add your Anthropic key and choose models in Settings before parsing a resume or running the interview.</p>
-            <Link className="button-link" href="/settings">Open Settings</Link>
+            <p>
+              Add your Anthropic key and choose models in Settings before parsing a resume or
+              running the interview.
+            </p>
+            <Link className="button-link" href="/settings">
+              Open Settings
+            </Link>
           </section>
         )}
-        <section className="card stack" aria-labelledby="resume-title" aria-busy={parsing || undefined}>
+        <section
+          className="card stack"
+          aria-labelledby="resume-title"
+          aria-busy={parsing || undefined}
+        >
           <h2 id="resume-title">Resume</h2>
           {parsing ? (
             <div className="loader" role="status" aria-live="polite">
               <span className="loader-spinner" aria-hidden="true" />
               <div className="loader-copy">
                 <p className="loader-title">Parsing your resume</p>
-                <p className="loader-hint">Sending the file to Anthropic with your key. This can take a moment.</p>
+                <p className="loader-hint">
+                  Sending the file to Anthropic with your key. This can take a moment.
+                </p>
               </div>
             </div>
           ) : (
@@ -160,7 +211,16 @@ export default function OnboardingPage() {
             </>
           )}
         </section>
-        {editing && <section className="card"><h2>Confirm your profile</h2><ProfileEditor profile={editing} onSave={saveProfile} submitLabel="Confirm and save profile" /></section>}
+        {editing && (
+          <section className="card">
+            <h2>Confirm your profile</h2>
+            <ProfileEditor
+              profile={editing}
+              onSave={saveProfile}
+              submitLabel="Confirm and save profile"
+            />
+          </section>
+        )}
         {profile && (
           <section className="card stack">
             <Interview

@@ -24,22 +24,22 @@ No accounts, no database, no server-side state. Every visitor brings their own A
 
 ## 2. Closed decisions — do not revisit
 
-| # | Decision | Why it is closed |
-|---|---|---|
-| D1 | **Deploy to Vercel as a normal Next.js 16+ app.** Not a static export. Use `proxy.ts`, not the deprecated `middleware.ts` convention. | Exactly one server route is required (`/api/fetch-job`). A static export cannot host it; the route would 404 in production and URL import would be dead on arrival. |
-| D2 | **All user data lives in the visitor's browser** (IndexedDB via Dexie). No server-side persistence, ever. | Product constraint: no accounts. |
-| D3 | **The visitor supplies their own API key**, stored client-side, calling `api.anthropic.com` directly with `dangerouslyAllowBrowser: true`. | We don't pay for their usage and don't want custody of their credentials. |
-| D4 | **Do not proxy Anthropic calls through our server.** | The browser must hold the key regardless, so proxying gains nothing on theft and makes us a custodian of other people's credentials. |
-| D5 | **No `pdfjs-dist`.** PDFs go to Claude as base64 `document` blocks. | Its text extraction mangles two-column resumes, and every client dependency can read the API key. |
-| D6 | **PDF blobs are a regenerable cache, not data.** `resume` + `coverLetter` + `templateVersion` fully determine them. | Keeps backups small and pure-JSON without silently changing old layouts after a template update. |
-| D7 | **The user picks their own models**, per call type, from their key's live catalog. | They pay. Also future-proofs against model releases without a code change. |
-| D8 | **No third-party scripts.** No analytics, no CDN fonts, no error-reporting SaaS. | Any of them can read the API key. |
-| D9 | **Require the capabilities the product uses.** Unsupported browsers get an explanation screen; there is no reduced browser mode. | Folder access requires a secure-context Chromium desktop browser with `showDirectoryPicker`. |
-| D10 | **URL import is best-effort for public pages.** Paste is the explicit fallback. | Login walls, bot protection, and client-rendered job boards cannot be made reliable with a small server fetcher. |
-| D11 | **No invented dollar estimate.** Track exact usage fields returned by Claude. Show money only if Anthropic adds authoritative price data to the API. | The Models API currently exposes capabilities and limits, not prices. |
-| D12 | **AI-written claims are grounded.** Claude may rewrite for relevance, but each generated claim declares existing profile source IDs. Interview changes are proposals that require approval. | Tailoring must not turn job requirements into candidate experience. |
-| D13 | **Versions are immutable.** AI regeneration and user edits both save as a new version. | History remains meaningful and rollback is trivial. |
-| D14 | **Keep best-effort URL import and explicitly accept its residual exfiltration risk.** | A compromised client dependency can encode a key into a public URL and ask the same-origin fetch route to request it. SSRF controls and CSP do not close that channel; removing URL import is the only complete fix. |
+| #   | Decision                                                                                                                                                                                    | Why it is closed                                                                                                                                                                                                     |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | **Deploy to Vercel as a normal Next.js 16+ app.** Not a static export. Use `proxy.ts`, not the deprecated `middleware.ts` convention.                                                       | Exactly one server route is required (`/api/fetch-job`). A static export cannot host it; the route would 404 in production and URL import would be dead on arrival.                                                  |
+| D2  | **All user data lives in the visitor's browser** (IndexedDB via Dexie). No server-side persistence, ever.                                                                                   | Product constraint: no accounts.                                                                                                                                                                                     |
+| D3  | **The visitor supplies their own API key**, stored client-side, calling `api.anthropic.com` directly with `dangerouslyAllowBrowser: true`.                                                  | We don't pay for their usage and don't want custody of their credentials.                                                                                                                                            |
+| D4  | **Do not proxy Anthropic calls through our server.**                                                                                                                                        | The browser must hold the key regardless, so proxying gains nothing on theft and makes us a custodian of other people's credentials.                                                                                 |
+| D5  | **No `pdfjs-dist`.** PDFs go to Claude as base64 `document` blocks.                                                                                                                         | Its text extraction mangles two-column resumes, and every client dependency can read the API key.                                                                                                                    |
+| D6  | **PDF blobs are a regenerable cache, not data.** `resume` + `coverLetter` + `templateVersion` fully determine them.                                                                         | Keeps backups small and pure-JSON without silently changing old layouts after a template update.                                                                                                                     |
+| D7  | **The user picks their own models**, per call type, from their key's live catalog.                                                                                                          | They pay. Also future-proofs against model releases without a code change.                                                                                                                                           |
+| D8  | **No third-party scripts.** No analytics, no CDN fonts, no error-reporting SaaS.                                                                                                            | Any of them can read the API key.                                                                                                                                                                                    |
+| D9  | **Require the capabilities the product uses.** Unsupported browsers get an explanation screen; there is no reduced browser mode.                                                            | Folder access requires a secure-context Chromium desktop browser with `showDirectoryPicker`.                                                                                                                         |
+| D10 | **URL import is best-effort for public pages.** Paste is the explicit fallback.                                                                                                             | Login walls, bot protection, and client-rendered job boards cannot be made reliable with a small server fetcher.                                                                                                     |
+| D11 | **No invented dollar estimate.** Track exact usage fields returned by Claude. Show money only if Anthropic adds authoritative price data to the API.                                        | The Models API currently exposes capabilities and limits, not prices.                                                                                                                                                |
+| D12 | **AI-written claims are grounded.** Claude may rewrite for relevance, but each generated claim declares existing profile source IDs. Interview changes are proposals that require approval. | Tailoring must not turn job requirements into candidate experience.                                                                                                                                                  |
+| D13 | **Versions are immutable.** AI regeneration and user edits both save as a new version.                                                                                                      | History remains meaningful and rollback is trivial.                                                                                                                                                                  |
+| D14 | **Keep best-effort URL import and explicitly accept its residual exfiltration risk.**                                                                                                       | A compromised client dependency can encode a key into a public URL and ask the same-origin fetch route to request it. SSRF controls and CSP do not close that channel; removing URL import is the only complete fix. |
 
 ---
 
@@ -185,23 +185,36 @@ Write this file first. The app assigns every new ID with `crypto.randomUUID()`; 
 // (see .cursor/rules/constants-over-string-unions.mdc). Runtime code uses
 // JobStatus.Saved, CallKind.Parse, Effort.Low, etc. — not raw string literals.
 export const JobStatus = {
-  Saved: 'saved', Applied: 'applied', Interviewing: 'interviewing',
-  Offer: 'offer', Rejected: 'rejected', Withdrawn: 'withdrawn',
+  Saved: 'saved',
+  Applied: 'applied',
+  Interviewing: 'interviewing',
+  Offer: 'offer',
+  Rejected: 'rejected',
+  Withdrawn: 'withdrawn',
 } as const;
 export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
 
 export const CallKind = {
-  Parse: 'parse', Interview: 'interview', Analyze: 'analyze', Tailor: 'tailor',
+  Parse: 'parse',
+  Interview: 'interview',
+  Analyze: 'analyze',
+  Tailor: 'tailor',
 } as const;
 export type CallKind = (typeof CallKind)[keyof typeof CallKind];
 
 export const Effort = {
-  Low: 'low', Medium: 'medium', High: 'high', Xhigh: 'xhigh', Max: 'max',
+  Low: 'low',
+  Medium: 'medium',
+  High: 'high',
+  Xhigh: 'xhigh',
+  Max: 'max',
 } as const;
 export type Effort = (typeof Effort)[keyof typeof Effort];
 
 export const KeyStorageMode = {
-  Encrypted: 'encrypted', Session: 'session', Plaintext: 'plaintext',
+  Encrypted: 'encrypted',
+  Session: 'session',
+  Plaintext: 'plaintext',
 } as const;
 export type KeyStorageMode = (typeof KeyStorageMode)[keyof typeof KeyStorageMode];
 
@@ -217,7 +230,7 @@ export type GenerationOrigin = (typeof GenerationOrigin)[keyof typeof Generation
 // changed representation.
 ```
 
-Full interface definitions live in `lib/types.ts` (single source of truth after T1). String *values* are unchanged (`'saved'`, `'parse'`, …).
+Full interface definitions live in `lib/types.ts` (single source of truth after T1). String _values_ are unchanged (`'saved'`, `'parse'`, …).
 
 `lib/schemas.ts` holds the raw JSON Schemas for the four structured Claude outputs and small runtime assertion functions. Do not add Zod. Every object schema sets `additionalProperties: false`; every property is listed in `required`, using nullable values where absence is valid.
 
@@ -249,16 +262,19 @@ Never retain the client outside the callback. Never set a custom `baseURL`. The 
 All four calls use `client.messages.parse`, non-streaming:
 
 ```ts
-client.messages.parse({
-  model,
-  max_tokens,
-  system,
-  messages,
-  output_config: {
-    ...(effort ? { effort } : {}),
-    format: jsonSchemaOutputFormat(schema),
+client.messages.parse(
+  {
+    model,
+    max_tokens,
+    system,
+    messages,
+    output_config: {
+      ...(effort ? { effort } : {}),
+      format: jsonSchemaOutputFormat(schema),
+    },
   },
-}, { signal });
+  { signal },
+);
 ```
 
 The helper is imported from `@anthropic-ai/sdk/helpers/json-schema`. `model`, `max_tokens`, optional `effort`, and the schema come from `lib/model-config.ts`; call sites supply only the call kind, system text, and messages.
@@ -276,7 +292,7 @@ PDF parsing uses this exact user content:
     },
   },
   { type: 'text', text: parsePrompt },
-]
+];
 ```
 
 DOCX parsing uses `mammoth.extractRawText({ arrayBuffer })` and sends the result in a text block. It never renders Mammoth HTML.
@@ -287,12 +303,12 @@ Before Mammoth runs, `docx-preflight.worker.ts` uses streaming `fflate.Unzip` in
 
 Every selected model must have `structured_outputs.supported === true`. The PDF parse model must additionally have `pdf_input.supported === true.`
 
-| Call | Output schema | Desired `max_tokens` | Desired effort |
-|---|---|---:|---|
-| `parse` | profile fields without IDs or timestamps | 4,096 | `low` |
-| `interview` | `{ reply, proposedProfile, changes, complete }` | 4,096 | `medium` |
-| `analyze` | `{ title, company, description, requirements, keywords, matchScore, gaps }` | 4,096 | `low` |
-| `tailor` | `{ resume, coverLetter, changeSummary }` | 8,192 | `high` |
+| Call        | Output schema                                                               | Desired `max_tokens` | Desired effort |
+| ----------- | --------------------------------------------------------------------------- | -------------------: | -------------- |
+| `parse`     | profile fields without IDs or timestamps                                    |                4,096 | `low`          |
+| `interview` | `{ reply, proposedProfile, changes, complete }`                             |                4,096 | `medium`       |
+| `analyze`   | `{ title, company, description, requirements, keywords, matchScore, gaps }` |                4,096 | `low`          |
+| `tailor`    | `{ resume, coverLetter, changeSummary }`                                    |                8,192 | `high`         |
 
 Set `max_tokens` to the lower of the table value and the positive `model.max_tokens`. If the catalog reports a non-positive limit, reject the model as unusable. For effort, choose the desired value when supported; otherwise choose the highest supported value below it in `low → medium → high → xhigh → max` order; omit `effort` when the capability is absent. Do not send `thinking` in v1.
 
@@ -640,24 +656,24 @@ Tasks are sequential unless their dependency line says otherwise. Do not modify 
 
 The production MVP is accepted only when all rows are objectively true.
 
-| Area | Required evidence |
-|---|---|
-| Browser | Missing required capability shows only the unsupported screen; current desktop Chrome and Edge complete E2E. |
-| Key | Encrypted default uses a non-extractable wrapping key, survives reload only as ciphertext, auto-locks after idle/pagehide, and starts locked; session key does not survive; plaintext requires warning consent; backup contains none of them. |
-| Claude | Every call uses the chosen live model, capability adapter, structured output, no retry, refusal handling, and usage recording. |
-| Resume import | PDF and DOCX under 10 MiB parse; wrong signatures, malformed/ZIP64/path-traversal/over-expanded DOCX, oversize input or text, empty DOCX, refusal, and incomplete output are safe errors. |
-| Interview | No proposal changes the profile before approval; reject leaves it unchanged; reload retains a pending proposal. |
-| Jobs | Paste works; public URL works in the test harness; blocked/login/JS pages fall back to paste; status/filter/search persist. |
-| Grounding | Foreign or empty provenance is rejected; Kubernetes fixture never becomes candidate experience in the release eval. |
-| Versions | AI generation, regeneration, and manual editing create immutable monotonically increasing versions. |
-| PDFs | Both documents preview and download; deleting cached blobs and reopening creates non-empty PDFs from unchanged document records with zero Anthropic requests. |
-| Backup | Export is checksummed allowlisted JSON; invalid, oversized, over-count, or checksum-mismatched import writes nothing; confirmed valid import first initiates a safety export, then replaces atomically and preserves key/folder settings. |
-| XSS | Posting and model markup render visibly as text; no executable event handler or script runs. |
-| SSRF | Unit tests prove all listed address classes and every redirect hop are blocked before connection. |
-| URL fetch abuse | Production WAF limits `POST /api/fetch-job` to 20 requests per IP per 10 minutes and returns 429 for the next request. |
-| CSP | Production header has a fresh nonce and exactly two `connect-src` entries. |
-| Accessibility | Playwright's keyboard-only path completes onboarding, job creation, generation review, and download; headings, labels, focus order, errors, and status announcements are asserted. |
-| Quality | `npm ci && npm run check` exits 0 from a clean checkout; Vercel production build succeeds. |
+| Area            | Required evidence                                                                                                                                                                                                                             |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Browser         | Missing required capability shows only the unsupported screen; current desktop Chrome and Edge complete E2E.                                                                                                                                  |
+| Key             | Encrypted default uses a non-extractable wrapping key, survives reload only as ciphertext, auto-locks after idle/pagehide, and starts locked; session key does not survive; plaintext requires warning consent; backup contains none of them. |
+| Claude          | Every call uses the chosen live model, capability adapter, structured output, no retry, refusal handling, and usage recording.                                                                                                                |
+| Resume import   | PDF and DOCX under 10 MiB parse; wrong signatures, malformed/ZIP64/path-traversal/over-expanded DOCX, oversize input or text, empty DOCX, refusal, and incomplete output are safe errors.                                                     |
+| Interview       | No proposal changes the profile before approval; reject leaves it unchanged; reload retains a pending proposal.                                                                                                                               |
+| Jobs            | Paste works; public URL works in the test harness; blocked/login/JS pages fall back to paste; status/filter/search persist.                                                                                                                   |
+| Grounding       | Foreign or empty provenance is rejected; Kubernetes fixture never becomes candidate experience in the release eval.                                                                                                                           |
+| Versions        | AI generation, regeneration, and manual editing create immutable monotonically increasing versions.                                                                                                                                           |
+| PDFs            | Both documents preview and download; deleting cached blobs and reopening creates non-empty PDFs from unchanged document records with zero Anthropic requests.                                                                                 |
+| Backup          | Export is checksummed allowlisted JSON; invalid, oversized, over-count, or checksum-mismatched import writes nothing; confirmed valid import first initiates a safety export, then replaces atomically and preserves key/folder settings.     |
+| XSS             | Posting and model markup render visibly as text; no executable event handler or script runs.                                                                                                                                                  |
+| SSRF            | Unit tests prove all listed address classes and every redirect hop are blocked before connection.                                                                                                                                             |
+| URL fetch abuse | Production WAF limits `POST /api/fetch-job` to 20 requests per IP per 10 minutes and returns 429 for the next request.                                                                                                                        |
+| CSP             | Production header has a fresh nonce and exactly two `connect-src` entries.                                                                                                                                                                    |
+| Accessibility   | Playwright's keyboard-only path completes onboarding, job creation, generation review, and download; headings, labels, focus order, errors, and status announcements are asserted.                                                            |
+| Quality         | `npm ci && npm run check` exits 0 from a clean checkout; Vercel production build succeeds.                                                                                                                                                    |
 
 Manual release checks:
 

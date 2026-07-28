@@ -11,9 +11,11 @@ const callLabels: Record<CallKindValue, string> = {
 };
 
 function compatible(model: ModelInfo, kind: CallKindValue): boolean {
-  return model.max_tokens > 0 &&
+  return (
+    model.max_tokens > 0 &&
     model.capabilities.structured_outputs?.supported === true &&
-    (kind !== CallKind.Parse || model.capabilities.pdf_input?.supported === true);
+    (kind !== CallKind.Parse || model.capabilities.pdf_input?.supported === true)
+  );
 }
 
 export function ModelPicker({
@@ -44,7 +46,9 @@ export function ModelPicker({
                 ...options.map((model) => ({ value: model.id, label: model.display_name })),
               ]}
             />
-            {!options.length && <span className="field-error">No compatible live model is available.</span>}
+            {!options.length && (
+              <span className="field-error">No compatible live model is available.</span>
+            )}
           </label>
         );
       })}

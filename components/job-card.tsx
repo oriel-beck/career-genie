@@ -32,12 +32,16 @@ export function JobCard({ job, onDeleted }: { job: Job; onDeleted?: () => void }
         <summary className="job-card-summary">
           <HoverTooltip className="job-card-title" label={job.title || 'Untitled job'} />
           <HoverTooltip className="job-card-company" label={job.company || 'Company not set'} />
-          <span className="eyebrow">{job.status} · <MatchScore score={job.matchScore} gaps={job.gaps} /></span>
+          <span className="eyebrow">
+            {job.status} · <MatchScore score={job.matchScore} gaps={job.gaps} />
+          </span>
         </summary>
         <div className="job-card-body">
           <p className="job-card-expanded-heading">
             <strong>{job.title || 'Untitled job'}</strong>
-            {job.company ? <span className="job-card-expanded-company"> · {job.company}</span> : null}
+            {job.company ? (
+              <span className="job-card-expanded-company"> · {job.company}</span>
+            ) : null}
           </p>
           <p className="prewrap">{job.description}</p>
         </div>

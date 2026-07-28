@@ -1,12 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type {
-  Generation,
-  InterviewState,
-  Job,
-  Profile,
-  Settings,
-  UsageRecord,
-} from './types';
+import type { Generation, InterviewState, Job, Profile, Settings, UsageRecord } from './types';
 
 export class CareerGenieDb extends Dexie {
   settings!: EntityTable<Settings, 'id'>;

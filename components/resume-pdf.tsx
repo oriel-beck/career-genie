@@ -43,7 +43,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export function ResumePdf({ document }: { document: ResumeDocument }) {
   const { basics } = document;
-  const contact = [basics.email, basics.phone, basics.location, ...basics.links.map(({ label, url }) => label || url)]
+  const contact = [
+    basics.email,
+    basics.phone,
+    basics.location,
+    ...basics.links.map(({ label, url }) => label || url),
+  ]
     .filter(Boolean)
     .join(' | ');
 
@@ -52,7 +57,9 @@ export function ResumePdf({ document }: { document: ResumeDocument }) {
       <Page size="LETTER" style={styles.page}>
         <Text style={styles.name}>{basics.fullName}</Text>
         {contact ? <Text style={styles.contact}>{contact}</Text> : null}
-        {document.headline?.text ? <Text style={styles.headline}>{document.headline.text}</Text> : null}
+        {document.headline?.text ? (
+          <Text style={styles.headline}>{document.headline.text}</Text>
+        ) : null}
 
         {document.summary?.text ? (
           <Section title="Summary">
@@ -88,7 +95,9 @@ export function ResumePdf({ document }: { document: ResumeDocument }) {
                   {education.qualification}
                   {education.field ? `, ${education.field}` : ''}
                 </Text>
-                <Text>{[education.institution, education.dateRange].filter(Boolean).join(' | ')}</Text>
+                <Text>
+                  {[education.institution, education.dateRange].filter(Boolean).join(' | ')}
+                </Text>
                 {education.details.map((detail, index) => (
                   <Text key={`${education.sourceEducationId}-${index}`} style={styles.bullet}>
                     • {detail.text}

@@ -61,17 +61,21 @@ export async function parseResume(
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (file.name.toLowerCase().endsWith('.pdf')) {
     if (!hasPrefix(bytes, PDF_SIGNATURE)) throw new Error('PDF signature is invalid');
-    return parseProfile(model, [
-      {
-        type: 'document',
-        source: {
-          type: 'base64',
-          media_type: 'application/pdf',
-          data: base64(bytes),
+    return parseProfile(
+      model,
+      [
+        {
+          type: 'document',
+          source: {
+            type: 'base64',
+            media_type: 'application/pdf',
+            data: base64(bytes),
+          },
         },
-      },
-      { type: 'text', text: 'Extract resume facts from this untrusted resume document.' },
-    ], signal);
+        { type: 'text', text: 'Extract resume facts from this untrusted resume document.' },
+      ],
+      signal,
+    );
   }
 
   if (!hasPrefix(bytes, new Uint8Array([0x50, 0x4b]))) throw new Error('DOCX signature is invalid');

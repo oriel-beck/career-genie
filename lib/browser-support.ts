@@ -9,8 +9,7 @@ export const BrowserCapability = {
   FileReader: 'fileReader',
   CreateObjectURL: 'createObjectURL',
 } as const;
-export type BrowserCapability =
-  (typeof BrowserCapability)[keyof typeof BrowserCapability];
+export type BrowserCapability = (typeof BrowserCapability)[keyof typeof BrowserCapability];
 
 export type BrowserSupportResult = {
   supported: boolean;

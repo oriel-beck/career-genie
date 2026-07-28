@@ -1,28 +1,28 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { AppShell } from "@/components/app-shell";
-import { db } from "@/lib/db";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { AppShell } from '@/components/app-shell';
+import { db } from '@/lib/db';
 
 export default function HomePage() {
   const [startHref, setStartHref] = useState<string>();
-  const [startLabel, setStartLabel] = useState("Continue");
+  const [startLabel, setStartLabel] = useState('Continue');
 
   useEffect(() => {
     void Promise.all([db.profiles.get(1), db.settings.get(1)]).then(([profile, settings]) => {
       if (profile) {
-        setStartHref("/dashboard");
-        setStartLabel("Open jobs");
+        setStartHref('/dashboard');
+        setStartLabel('Open jobs');
         return;
       }
       if (settings?.keyHint) {
-        setStartHref("/onboarding");
-        setStartLabel("Set up profile");
+        setStartHref('/onboarding');
+        setStartLabel('Set up profile');
         return;
       }
-      setStartHref("/settings");
-      setStartLabel("Add API key");
+      setStartHref('/settings');
+      setStartLabel('Add API key');
     });
   }, []);
 

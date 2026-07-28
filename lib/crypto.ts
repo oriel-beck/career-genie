@@ -46,7 +46,13 @@ export function assertPassphrase(passphrase: string): void {
 
 export async function deriveWrappingKey(passphrase: string, salt: Uint8Array): Promise<CryptoKey> {
   assertPassphrase(passphrase);
-  const material = await crypto.subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  const material = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(passphrase),
+    'PBKDF2',
+    false,
+    ['deriveKey'],
+  );
   return crypto.subtle.deriveKey(
     { name: 'PBKDF2', hash: 'SHA-256', salt: bufferSource(salt), iterations: KEY_ITERATIONS },
     material,
@@ -61,7 +67,11 @@ export async function encryptKey(apiKey: string, passphrase: string): Promise<En
   const iv = randomBytes(IV_BYTES);
   const wrappingKey = await deriveWrappingKey(passphrase, salt);
   const ciphertext = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: bufferSource(iv), additionalData: bufferSource(encoder.encode(KEY_AAD)) },
+    {
+      name: 'AES-GCM',
+      iv: bufferSource(iv),
+      additionalData: bufferSource(encoder.encode(KEY_AAD)),
+    },
     wrappingKey,
     bufferSource(encoder.encode(apiKey)),
   );
@@ -76,7 +86,10 @@ export async function encryptKey(apiKey: string, passphrase: string): Promise<En
   };
 }
 
-export async function decryptKey(record: EncryptedKeyRecord, wrappingKey: CryptoKey): Promise<string> {
+export async function decryptKey(
+  record: EncryptedKeyRecord,
+  wrappingKey: CryptoKey,
+): Promise<string> {
   if (
     record.v !== 1 ||
     record.kdf !== 'PBKDF2-SHA256' ||
@@ -101,7 +114,10 @@ export async function decryptKey(record: EncryptedKeyRecord, wrappingKey: Crypto
   }
 }
 
-export async function unlockEncryptedKey(record: EncryptedKeyRecord, passphrase: string): Promise<CryptoKey> {
+export async function unlockEncryptedKey(
+  record: EncryptedKeyRecord,
+  passphrase: string,
+): Promise<CryptoKey> {
   const wrappingKey = await deriveWrappingKey(passphrase, base64ToBytes(record.salt));
   await decryptKey(record, wrappingKey);
   return wrappingKey;

@@ -39,9 +39,7 @@ async function mockAnthropic(page: Page): Promise<void> {
   });
 }
 
-test('shows only the unsupported browser screen when a capability is missing', async ({
-  page,
-}) => {
+test('shows only the unsupported browser screen when a capability is missing', async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(globalThis, 'showDirectoryPicker', {
       configurable: true,
@@ -55,9 +53,7 @@ test('shows only the unsupported browser screen when a capability is missing', a
     });
   });
   await page.goto('/settings');
-  await expect(
-    page.getByRole('heading', { name: 'This browser is not supported' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'This browser is not supported' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Settings' })).toHaveCount(0);
 });
 

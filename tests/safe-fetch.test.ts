@@ -143,7 +143,10 @@ test('pinned lookup supports Node all:true and legacy callback shapes', () => {
   let allAddresses: unknown;
   let legacyAddress: unknown;
   let legacyFamily: unknown;
-  lookup('example.test', { all: true }, ((error: null, addresses: Array<{ address: string; family: number }>) => {
+  lookup('example.test', { all: true }, ((
+    error: null,
+    addresses: Array<{ address: string; family: number }>,
+  ) => {
     assert.equal(error, null);
     allAddresses = addresses;
   }) as (...args: never[]) => void);

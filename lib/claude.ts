@@ -30,9 +30,8 @@ export class ClaudeError extends Error {
 function safeError(error: unknown): ClaudeError {
   if (error && typeof error === 'object') {
     const status = 'status' in error && typeof error.status === 'number' ? error.status : undefined;
-    const requestId = 'requestID' in error && typeof error.requestID === 'string'
-      ? error.requestID
-      : undefined;
+    const requestId =
+      'requestID' in error && typeof error.requestID === 'string' ? error.requestID : undefined;
     const apiMessage =
       'error' in error &&
       error.error &&
@@ -82,16 +81,19 @@ async function runClaude<T>(
   const config = buildModelRequestConfig(kind, model, schema);
   try {
     return await withAnthropicClient(async (client) => {
-      const response = await client.messages.parse({
-        model: config.model,
-        max_tokens: config.max_tokens,
-        system,
-        messages,
-        output_config: {
-          ...(config.effort ? { effort: config.effort } : {}),
-          format: jsonSchemaOutputFormat(config.schema),
+      const response = await client.messages.parse(
+        {
+          model: config.model,
+          max_tokens: config.max_tokens,
+          system,
+          messages,
+          output_config: {
+            ...(config.effort ? { effort: config.effort } : {}),
+            format: jsonSchemaOutputFormat(config.schema),
+          },
         },
-      }, { signal });
+        { signal },
+      );
 
       await recordUsage(kind, config.model, response.usage);
       if (response.stop_reason === 'refusal') {
@@ -143,7 +145,13 @@ export function interviewProfile(
   profile: Profile,
   turns: Array<{ role: ChatRole; content: string }>,
   signal?: AbortSignal,
-): Promise<{ reply: string; questions: string[]; proposedProfile: Profile | null; changes: string[]; complete: boolean }> {
+): Promise<{
+  reply: string;
+  questions: string[];
+  proposedProfile: Profile | null;
+  changes: string[];
+  complete: boolean;
+}> {
   const today = todayIsoLocal();
   return runClaude(
     CallKind.Interview,
@@ -191,10 +199,12 @@ export function analyzeJob(
       `description must be only the role overview and responsibilities in plain text. ` +
       `Fill title and company when present; use empty string when unknown. ` +
       `Analyze the job against the profile without treating requirements as experience.`,
-    [{
-      role: ChatRole.User,
-      content: `${xmlData('profile-data', profile)}\n${xmlData('job-data', jobText)}`,
-    }],
+    [
+      {
+        role: ChatRole.User,
+        content: `${xmlData('profile-data', profile)}\n${xmlData('job-data', jobText)}`,
+      },
+    ],
     signal,
   );
 }
@@ -205,7 +215,11 @@ export function tailorResume(
   job: Job,
   extraContext?: string,
   signal?: AbortSignal,
-): Promise<{ resume: import('./types').ResumeDocument; coverLetter: import('./types').CoverLetterDocument; changeSummary: string[] }> {
+): Promise<{
+  resume: import('./types').ResumeDocument;
+  coverLetter: import('./types').CoverLetterDocument;
+  changeSummary: string[];
+}> {
   return runClaude(
     CallKind.Tailor,
     model,
@@ -213,10 +227,12 @@ export function tailorResume(
     assertTailorOutput,
     `${TRUST_BOUNDARY} Return resumeJson and coverLetterJson as JSON strings. ${TAILOR_JSON_SHAPE} ` +
       `Do not add employers, titles, dates, credentials, metrics, tools, or skills absent from the profile. Gaps remain gaps.`,
-    [{
-      role: ChatRole.User,
-      content: `${xmlData('profile-data', profile)}\n${xmlData('job-data', job)}\n${xmlData('extra-context', extraContext ?? '')}`,
-    }],
+    [
+      {
+        role: ChatRole.User,
+        content: `${xmlData('profile-data', profile)}\n${xmlData('job-data', job)}\n${xmlData('extra-context', extraContext ?? '')}`,
+      },
+    ],
     signal,
   );
 }

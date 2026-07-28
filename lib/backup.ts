@@ -19,7 +19,13 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 function json(value: unknown): void {
-  if (value === undefined || value === null || typeof value === 'string' || typeof value === 'boolean') return;
+  if (
+    value === undefined ||
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'boolean'
+  )
+    return;
   if (typeof value === 'number' && Number.isFinite(value)) return;
   if (Array.isArray(value)) return value.forEach(json);
   if (isObject(value)) return Object.values(value).forEach(json);
@@ -38,7 +44,8 @@ function string(value: unknown, label: string): asserts value is string {
 }
 
 function number(value: unknown, label: string): asserts value is number {
-  if (typeof value !== 'number' || !Number.isFinite(value)) throw new BackupError(`Invalid ${label}`);
+  if (typeof value !== 'number' || !Number.isFinite(value))
+    throw new BackupError(`Invalid ${label}`);
 }
 
 function array(value: unknown, label: string): asserts value is unknown[] {
@@ -49,7 +56,17 @@ function noSecretFields(value: unknown): void {
   if (Array.isArray(value)) return value.forEach(noSecretFields);
   if (!isObject(value)) return;
   for (const [key, child] of Object.entries(value)) {
-    if (['apiKey', 'encryptedKey', 'plaintextKey', 'keyHint', 'folderHandle', 'resumeBlob', 'coverBlob'].includes(key)) {
+    if (
+      [
+        'apiKey',
+        'encryptedKey',
+        'plaintextKey',
+        'keyHint',
+        'folderHandle',
+        'resumeBlob',
+        'coverBlob',
+      ].includes(key)
+    ) {
       throw new BackupError('Backup contains excluded data');
     }
     noSecretFields(child);
@@ -57,10 +74,30 @@ function noSecretFields(value: unknown): void {
 }
 
 function validateJob(value: unknown): void {
-  const job = fields(value, ['id', 'title', 'company', 'url', 'description', 'requirements', 'keywords', 'status', 'matchScore', 'gaps', 'notes', 'createdAt', 'updatedAt'], 'job');
-  for (const name of ['id', 'title', 'company', 'description', 'status']) string(job[name], `job.${name}`);
+  const job = fields(
+    value,
+    [
+      'id',
+      'title',
+      'company',
+      'url',
+      'description',
+      'requirements',
+      'keywords',
+      'status',
+      'matchScore',
+      'gaps',
+      'notes',
+      'createdAt',
+      'updatedAt',
+    ],
+    'job',
+  );
+  for (const name of ['id', 'title', 'company', 'description', 'status'])
+    string(job[name], `job.${name}`);
   number(job.matchScore, 'job.matchScore');
-  if (!Number.isInteger(job.matchScore) || job.matchScore < 0 || job.matchScore > 100) throw new BackupError('Invalid job.matchScore');
+  if (!Number.isInteger(job.matchScore) || job.matchScore < 0 || job.matchScore > 100)
+    throw new BackupError('Invalid job.matchScore');
   for (const name of ['requirements', 'keywords', 'gaps']) {
     array(job[name], `job.${name}`);
     job[name].forEach((item) => string(item, `job.${name}`));
@@ -71,26 +108,72 @@ function validateJob(value: unknown): void {
 }
 
 function validateGeneration(value: unknown, jobIds: Set<string>, generationIds: Set<string>): void {
-  const generation = fields(value, ['id', 'jobId', 'version', 'templateVersion', 'origin', 'parentId', 'resume', 'coverLetter', 'changeSummary', 'extraContext', 'modelUsed', 'createdAt'], 'generation');
+  const generation = fields(
+    value,
+    [
+      'id',
+      'jobId',
+      'version',
+      'templateVersion',
+      'origin',
+      'parentId',
+      'resume',
+      'coverLetter',
+      'changeSummary',
+      'extraContext',
+      'modelUsed',
+      'createdAt',
+    ],
+    'generation',
+  );
   for (const name of ['id', 'jobId', 'modelUsed']) string(generation[name], `generation.${name}`);
-  for (const name of ['version', 'templateVersion', 'createdAt']) number(generation[name], `generation.${name}`);
+  for (const name of ['version', 'templateVersion', 'createdAt'])
+    number(generation[name], `generation.${name}`);
   if (!jobIds.has(generation.jobId as string) || generationIds.has(generation.id as string)) {
     throw new BackupError('Generation has an invalid reference');
   }
-  if (generation.parentId !== undefined && (!generationIds.has(generation.parentId as string) || generation.parentId === generation.id)) {
+  if (
+    generation.parentId !== undefined &&
+    (!generationIds.has(generation.parentId as string) || generation.parentId === generation.id)
+  ) {
     throw new BackupError('Generation has an invalid parent reference');
   }
   array(generation.changeSummary, 'generation.changeSummary');
   generation.changeSummary.forEach((item) => string(item, 'generation.changeSummary'));
-  if (generation.extraContext !== undefined) string(generation.extraContext, 'generation.extraContext');
-  if (!isObject(generation.resume) || !isObject(generation.coverLetter)) throw new BackupError('Invalid generation document');
+  if (generation.extraContext !== undefined)
+    string(generation.extraContext, 'generation.extraContext');
+  if (!isObject(generation.resume) || !isObject(generation.coverLetter))
+    throw new BackupError('Invalid generation document');
   generationIds.add(generation.id as string);
 }
 
 function validateUsage(value: unknown): void {
-  const usage = fields(value, ['id', 'callKind', 'model', 'inputTokens', 'outputTokens', 'cacheReadTokens', 'cacheWriteTokens', 'cacheWrite5mTokens', 'cacheWrite1hTokens', 'at'], 'usage record');
+  const usage = fields(
+    value,
+    [
+      'id',
+      'callKind',
+      'model',
+      'inputTokens',
+      'outputTokens',
+      'cacheReadTokens',
+      'cacheWriteTokens',
+      'cacheWrite5mTokens',
+      'cacheWrite1hTokens',
+      'at',
+    ],
+    'usage record',
+  );
   for (const name of ['id', 'callKind', 'model']) string(usage[name], `usage.${name}`);
-  for (const name of ['inputTokens', 'outputTokens', 'cacheReadTokens', 'cacheWriteTokens', 'cacheWrite5mTokens', 'cacheWrite1hTokens', 'at']) {
+  for (const name of [
+    'inputTokens',
+    'outputTokens',
+    'cacheReadTokens',
+    'cacheWriteTokens',
+    'cacheWrite5mTokens',
+    'cacheWrite1hTokens',
+    'at',
+  ]) {
     number(usage[name], `usage.${name}`);
   }
 }
@@ -110,7 +193,10 @@ function canonical(payload: Omit<BackupV1, 'checksumSha256'>): Omit<BackupV1, 'c
 }
 
 async function checksum(payload: Omit<BackupV1, 'checksumSha256'>): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(canonical(payload))));
+  const digest = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(JSON.stringify(canonical(payload))),
+  );
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
@@ -153,30 +239,60 @@ export async function validateBackup(input: string | unknown): Promise<BackupV1>
   }
   let value: unknown = input;
   if (typeof input === 'string') {
-    try { value = JSON.parse(input); } catch { throw new BackupError('Backup is not valid JSON'); }
+    try {
+      value = JSON.parse(input);
+    } catch {
+      throw new BackupError('Backup is not valid JSON');
+    }
   }
-  const backup = fields(value, ['format', 'version', 'exportedAt', 'checksumSha256', 'profile', 'interview', 'jobs', 'generations', 'usage', 'preferences'], 'backup') as unknown as BackupV1;
-  if (backup.format !== 'career-genie' || backup.version !== 1) throw new BackupError('Unsupported backup format');
+  const backup = fields(
+    value,
+    [
+      'format',
+      'version',
+      'exportedAt',
+      'checksumSha256',
+      'profile',
+      'interview',
+      'jobs',
+      'generations',
+      'usage',
+      'preferences',
+    ],
+    'backup',
+  ) as unknown as BackupV1;
+  if (backup.format !== 'career-genie' || backup.version !== 1)
+    throw new BackupError('Unsupported backup format');
   string(backup.checksumSha256, 'backup checksum');
   number(backup.exportedAt, 'backup.exportedAt');
   array(backup.jobs, 'backup.jobs');
   array(backup.generations, 'backup.generations');
   array(backup.usage, 'backup.usage');
-  if (backup.jobs.length > MAX_JOBS || backup.generations.length > MAX_GENERATIONS || backup.usage.length > MAX_USAGE) {
+  if (
+    backup.jobs.length > MAX_JOBS ||
+    backup.generations.length > MAX_GENERATIONS ||
+    backup.usage.length > MAX_USAGE
+  ) {
     throw new BackupError('Backup exceeds record limits');
   }
   fields(backup.preferences, ['models'], 'preferences');
   if (!isObject(backup.preferences.models)) throw new BackupError('Invalid preferences.models');
   if (backup.interview !== undefined) {
-    const interview = fields(backup.interview, ['id', 'turns', 'pendingProfile', 'pendingSummary', 'complete', 'updatedAt'], 'interview');
-    if (interview.id !== 1 || typeof interview.complete !== 'boolean') throw new BackupError('Invalid interview');
+    const interview = fields(
+      backup.interview,
+      ['id', 'turns', 'pendingProfile', 'pendingSummary', 'complete', 'updatedAt'],
+      'interview',
+    );
+    if (interview.id !== 1 || typeof interview.complete !== 'boolean')
+      throw new BackupError('Invalid interview');
     array(interview.turns, 'interview.turns');
     if (interview.turns.length > MAX_TURNS) throw new BackupError('Backup exceeds interview limit');
   }
   json(backup);
   noSecretFields({ ...backup, checksumSha256: undefined });
   const { checksumSha256: expected, ...payload } = backup;
-  if (expected !== await checksum(canonical(payload))) throw new BackupError('Backup checksum does not match');
+  if (expected !== (await checksum(canonical(payload))))
+    throw new BackupError('Backup checksum does not match');
 
   const jobIds = new Set<string>();
   for (const job of backup.jobs) {
@@ -185,12 +301,16 @@ export async function validateBackup(input: string | unknown): Promise<BackupV1>
     jobIds.add(job.id);
   }
   const generationIds = new Set<string>();
-  for (const generation of backup.generations) validateGeneration(generation, jobIds, generationIds);
+  for (const generation of backup.generations)
+    validateGeneration(generation, jobIds, generationIds);
   backup.usage.forEach(validateUsage);
   return { ...canonical(payload), checksumSha256: expected };
 }
 
-export async function importBackup(input: string | unknown, database: CareerGenieDb = db): Promise<BackupV1> {
+export async function importBackup(
+  input: string | unknown,
+  database: CareerGenieDb = db,
+): Promise<BackupV1> {
   const backup = await validateBackup(input);
   const current = await database.settings.get(1);
   const settings: Settings = {
@@ -206,7 +326,14 @@ export async function importBackup(input: string | unknown, database: CareerGeni
 
   await database.transaction(
     'rw',
-    [database.settings, database.profiles, database.interview, database.jobs, database.generations, database.usage],
+    [
+      database.settings,
+      database.profiles,
+      database.interview,
+      database.jobs,
+      database.generations,
+      database.usage,
+    ],
     async () => {
       await Promise.all([
         database.profiles.clear(),
@@ -228,4 +355,10 @@ export async function importBackup(input: string | unknown, database: CareerGeni
   return backup;
 }
 
-export const BackupLimits = { MaxBytes: MAX_BYTES, MaxJobs: MAX_JOBS, MaxGenerations: MAX_GENERATIONS, MaxUsage: MAX_USAGE, MaxTurns: MAX_TURNS } as const;
+export const BackupLimits = {
+  MaxBytes: MAX_BYTES,
+  MaxJobs: MAX_JOBS,
+  MaxGenerations: MAX_GENERATIONS,
+  MaxUsage: MAX_USAGE,
+  MaxTurns: MAX_TURNS,
+} as const;

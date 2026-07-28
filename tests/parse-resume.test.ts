@@ -27,17 +27,21 @@ test('rejects invalid PDF and DOCX signatures before calling Claude', async () =
     /PDF signature/,
   );
   await assert.rejects(
-    parseResume(file(new Uint8Array([1, 2]), 'resume.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'), model),
+    parseResume(
+      file(
+        new Uint8Array([1, 2]),
+        'resume.docx',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ),
+      model,
+    ),
     /DOCX signature/,
   );
 });
 
 test('rejects files over 10 MiB before parsing', async () => {
   await assert.rejects(
-    parseResume(
-      file(new Uint8Array(MAX_RESUME_BYTES + 1), 'resume.pdf', 'application/pdf'),
-      model,
-    ),
+    parseResume(file(new Uint8Array(MAX_RESUME_BYTES + 1), 'resume.pdf', 'application/pdf'), model),
     /10 MiB/,
   );
 });
@@ -45,18 +49,24 @@ test('rejects files over 10 MiB before parsing', async () => {
 test('rejects ZIP64, path traversal, expansion limits, and empty DOCX archives', () => {
   assert.throws(() => preflightDocx(new Uint8Array([0x50, 0x4b, 0x06, 0x06])), /ZIP64/);
   assert.throws(
-    () => preflightDocx(docx({
-      '[Content_Types].xml': new Uint8Array(),
-      'word/document.xml': new Uint8Array(),
-      '../escape.xml': new Uint8Array(),
-    })),
+    () =>
+      preflightDocx(
+        docx({
+          '[Content_Types].xml': new Uint8Array(),
+          'word/document.xml': new Uint8Array(),
+          '../escape.xml': new Uint8Array(),
+        }),
+      ),
     /unsafe path/,
   );
   assert.throws(
-    () => preflightDocx(docx({
-      '[Content_Types].xml': new Uint8Array(),
-      'word/document.xml': new Uint8Array(MAX_DOCX_EXPANDED_BYTES + 1),
-    })),
+    () =>
+      preflightDocx(
+        docx({
+          '[Content_Types].xml': new Uint8Array(),
+          'word/document.xml': new Uint8Array(MAX_DOCX_EXPANDED_BYTES + 1),
+        }),
+      ),
     /expands/,
   );
   assert.throws(() => preflightDocx(docx({})), /missing required files/);

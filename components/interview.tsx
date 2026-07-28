@@ -44,9 +44,19 @@ export function Interview({
     };
   }
 
-  async function persist(nextTurns: ChatTurn[], nextProposal = proposal, nextSummary = summary, complete = false) {
+  async function persist(
+    nextTurns: ChatTurn[],
+    nextProposal = proposal,
+    nextSummary = summary,
+    complete = false,
+  ) {
     await db.interview.put({
-      id: 1, turns: nextTurns, pendingProfile: nextProposal, pendingSummary: nextSummary, complete, updatedAt: Date.now(),
+      id: 1,
+      turns: nextTurns,
+      pendingProfile: nextProposal,
+      pendingSummary: nextSummary,
+      complete,
+      updatedAt: Date.now(),
     });
   }
 
@@ -81,12 +91,19 @@ export function Interview({
         setTurns(nextTurns);
         setProposal(result.proposedProfile ?? undefined);
         setSummary(result.changes);
-        await persist(nextTurns, result.proposedProfile ?? undefined, result.changes, result.complete);
+        await persist(
+          nextTurns,
+          result.proposedProfile ?? undefined,
+          result.changes,
+          result.complete,
+        );
         setReady(true);
       } catch (error) {
         if (cancelled || controller.signal.aborted) return;
         toast(
-          error instanceof Error ? error.message : 'Could not start the gap interview. Check your key and interview model.',
+          error instanceof Error
+            ? error.message
+            : 'Could not start the gap interview. Check your key and interview model.',
           'error',
         );
         setReady(false);
@@ -115,7 +132,12 @@ export function Interview({
     }
 
     const previousTurns = turns;
-    const userTurn: ChatTurn = { id: crypto.randomUUID(), role: ChatRole.User, content: text, createdAt: Date.now() };
+    const userTurn: ChatTurn = {
+      id: crypto.randomUUID(),
+      role: ChatRole.User,
+      content: text,
+      createdAt: Date.now(),
+    };
     const pendingTurns = [...previousTurns, userTurn];
 
     setTurns(pendingTurns);
@@ -129,13 +151,20 @@ export function Interview({
       setTurns(nextTurns);
       setProposal(result.proposedProfile ?? undefined);
       setSummary(result.changes);
-      await persist(nextTurns, result.proposedProfile ?? undefined, result.changes, result.complete);
+      await persist(
+        nextTurns,
+        result.proposedProfile ?? undefined,
+        result.changes,
+        result.complete,
+      );
       toast('Response ready.', 'success');
     } catch (error) {
       setTurns(previousTurns);
       setAnswer(text);
       toast(
-        error instanceof Error ? error.message : 'The interview request failed. Check your key, model, and connection, then try again.',
+        error instanceof Error
+          ? error.message
+          : 'The interview request failed. Check your key, model, and connection, then try again.',
         'error',
       );
     } finally {
@@ -186,22 +215,31 @@ export function Interview({
       setTurns(nextTurns);
       setProposal(result.proposedProfile ?? undefined);
       setSummary(result.changes);
-      await persist(nextTurns, result.proposedProfile ?? undefined, result.changes, result.complete);
+      await persist(
+        nextTurns,
+        result.proposedProfile ?? undefined,
+        result.changes,
+        result.complete,
+      );
       setReady(true);
     } catch (error) {
-      toast(
-        error instanceof Error ? error.message : 'Could not start the gap interview.',
-        'error',
-      );
+      toast(error instanceof Error ? error.message : 'Could not start the gap interview.', 'error');
     } finally {
       setBooting(false);
     }
   }
 
   return (
-    <section className="stack" aria-labelledby="interview-title" aria-busy={booting || busy || undefined}>
+    <section
+      className="stack"
+      aria-labelledby="interview-title"
+      aria-busy={booting || busy || undefined}
+    >
       <h2 id="interview-title">Gap interview</h2>
-      <p>Answer questions to clarify your existing experience. Suggested changes never apply until you approve them.</p>
+      <p>
+        Answer questions to clarify your existing experience. Suggested changes never apply until
+        you approve them.
+      </p>
       {booting ? (
         <div className="loader" role="status" aria-live="polite">
           <span className="loader-spinner" aria-hidden="true" />
@@ -227,13 +265,18 @@ export function Interview({
             {turns.map((turn) => (
               <div key={turn.id} className={`turn ${turn.role}`}>
                 <p className="turn-intro">
-                  <strong>{turn.role === ChatRole.User ? 'You' : 'Career Genie'}:</strong> {turn.content}
+                  <strong>{turn.role === ChatRole.User ? 'You' : 'Career Genie'}:</strong>{' '}
+                  {turn.content}
                 </p>
-                {turn.role === ChatRole.Assistant && turn.questions && turn.questions.length > 0 && (
-                  <ol className="interview-questions">
-                    {turn.questions.map((question) => <li key={question}>{question}</li>)}
-                  </ol>
-                )}
+                {turn.role === ChatRole.Assistant &&
+                  turn.questions &&
+                  turn.questions.length > 0 && (
+                    <ol className="interview-questions">
+                      {turn.questions.map((question) => (
+                        <li key={question}>{question}</li>
+                      ))}
+                    </ol>
+                  )}
               </div>
             ))}
             {busy && (
@@ -256,8 +299,12 @@ export function Interview({
               disabled={busy}
             />
             <div className="button-row">
-              <button type="submit" disabled={busy}>Send answer</button>
-              <Link className="button-link secondary" href="/dashboard">Finish for now</Link>
+              <button type="submit" disabled={busy}>
+                Send answer
+              </button>
+              <Link className="button-link secondary" href="/dashboard">
+                Finish for now
+              </Link>
             </div>
           </form>
         </>
@@ -265,11 +312,21 @@ export function Interview({
       {proposal && !booting && (
         <aside className="proposal" aria-labelledby="proposal-title">
           <h3 id="proposal-title">Proposed profile changes</h3>
-          <ul>{summary.map((change) => <li key={change}>{change}</li>)}</ul>
+          <ul>
+            {summary.map((change) => (
+              <li key={change}>{change}</li>
+            ))}
+          </ul>
           <div className="button-row">
-            <button type="button" onClick={() => void approve()}>Approve</button>
-            <button type="button" onClick={() => onEdit(proposal)}>Edit</button>
-            <button type="button" className="secondary" onClick={() => void reject()}>Reject</button>
+            <button type="button" onClick={() => void approve()}>
+              Approve
+            </button>
+            <button type="button" onClick={() => onEdit(proposal)}>
+              Edit
+            </button>
+            <button type="button" className="secondary" onClick={() => void reject()}>
+              Reject
+            </button>
           </div>
         </aside>
       )}

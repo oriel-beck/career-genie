@@ -38,7 +38,11 @@ export function UnlockKeyForm({ id, onUnlocked, onCancel }: UnlockKeyFormProps) 
           autoFocus={Boolean(onCancel)}
         />
       </label>
-      {error ? <p className="field-error" role="alert">{error}</p> : null}
+      {error ? (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      ) : null}
       {onCancel ? (
         <div className="button-row dialog-actions">
           <button type="button" className="secondary" onClick={onCancel}>

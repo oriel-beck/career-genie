@@ -48,10 +48,7 @@ test('rejects models without structured outputs or positive max_tokens', () => {
     ),
     false,
   );
-  assert.equal(
-    isModelUsable(model({ id: 'm2', max_tokens: 0 }), CallKind.Analyze),
-    false,
-  );
+  assert.equal(isModelUsable(model({ id: 'm2', max_tokens: 0 }), CallKind.Analyze), false);
 });
 
 test('parse requires pdf_input support', () => {

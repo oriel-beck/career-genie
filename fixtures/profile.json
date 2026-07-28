@@ -5,9 +5,7 @@
     "email": "alex@example.com",
     "phone": "+1-555-0100",
     "location": "Austin, TX",
-    "links": [
-      { "id": "link-1", "label": "GitHub", "url": "https://github.com/example" }
-    ]
+    "links": [{ "id": "link-1", "label": "GitHub", "url": "https://github.com/example" }]
   },
   "headline": {
     "id": "headline-1",
@@ -45,9 +43,7 @@
       "field": "Computer Science",
       "startDate": "2012-08",
       "endDate": "2016-05",
-      "details": [
-        { "id": "edu-detail-1", "text": "Focus on distributed systems" }
-      ]
+      "details": [{ "id": "edu-detail-1", "text": "Focus on distributed systems" }]
     }
   ],
   "projects": [
@@ -72,11 +68,7 @@
     { "id": "skill-2", "text": "Docker" },
     { "id": "skill-3", "text": "Terraform" }
   ],
-  "certifications": [
-    { "id": "cert-1", "text": "AWS Solutions Architect Associate" }
-  ],
-  "languages": [
-    { "id": "lang-1", "text": "English" }
-  ],
+  "certifications": [{ "id": "cert-1", "text": "AWS Solutions Architect Associate" }],
+  "languages": [{ "id": "lang-1", "text": "English" }],
   "updatedAt": 1700000000000
 }

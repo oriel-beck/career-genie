@@ -8,9 +8,7 @@ export const metadata: Metadata = {
   description: 'Private, browser-based resume tailoring.',
 };
 
-export default async function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Reading x-nonce registers it with Next so framework scripts/styles get the
   // CSP nonce. Do not put nonce on <body> — browsers hide it and break hydration.
   const nonce = (await headers()).get('x-nonce') ?? undefined;

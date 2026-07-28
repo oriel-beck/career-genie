@@ -72,9 +72,7 @@ export async function fetchPublicJob(
     for (let redirects = 0; redirects <= 3; redirects += 1) {
       const hostname = url.hostname.replace(/^\[|\]$/g, '');
       const addresses = await resolveHost(hostname).catch((error) => {
-        throw controller.signal.aborted
-          ? new SafeFetchError(SafeFetchErrorKind.Timeout)
-          : error;
+        throw controller.signal.aborted ? new SafeFetchError(SafeFetchErrorKind.Timeout) : error;
       });
       if (controller.signal.aborted) throw new SafeFetchError(SafeFetchErrorKind.Timeout);
       if (!addresses.length || addresses.some((address) => !isPublicAddress(address))) {
@@ -116,7 +114,11 @@ export async function fetchPublicJob(
         if (response.status < 200 || response.status >= 300) {
           throw new SafeFetchError(SafeFetchErrorKind.Upstream);
         }
-        const contentType = response.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase();
+        const contentType = response.headers
+          .get('content-type')
+          ?.split(';', 1)[0]
+          ?.trim()
+          .toLowerCase();
         if (
           contentType !== 'text/html' &&
           contentType !== 'application/xhtml+xml' &&
@@ -206,7 +208,10 @@ async function defaultFetch(url: string, init: FetchInit): Promise<UpstreamRespo
   return undiciFetch(url, init as Parameters<typeof undiciFetch>[1]);
 }
 
-async function readBody(body: AsyncIterable<Uint8Array> | null, signal: AbortSignal): Promise<string> {
+async function readBody(
+  body: AsyncIterable<Uint8Array> | null,
+  signal: AbortSignal,
+): Promise<string> {
   if (!body) return '';
   const chunks: Uint8Array[] = [];
   let size = 0;
@@ -242,11 +247,22 @@ function isPublicAddress(address: string): boolean {
 function isPublicV4(address: string): boolean {
   const value = address.split('.').reduce((number, part) => (number << 8) + Number(part), 0) >>> 0;
   return ![
-    [0x00000000, 8], [0x0a000000, 8], [0x64400000, 10], [0x7f000000, 8],
-    [0xa9fe0000, 16], [0xac100000, 12], [0xc0000000, 24], [0xc0000200, 24],
-    [0xc0586300, 24], [0xc0a80000, 16], [0xc6120000, 15], [0xc6336400, 24],
-    [0xcb007100, 24], [0xe0000000, 4], [0xf0000000, 4],
-  ].some(([network, bits]) => (value >>> (32 - bits)) === (network >>> (32 - bits)));
+    [0x00000000, 8],
+    [0x0a000000, 8],
+    [0x64400000, 10],
+    [0x7f000000, 8],
+    [0xa9fe0000, 16],
+    [0xac100000, 12],
+    [0xc0000000, 24],
+    [0xc0000200, 24],
+    [0xc0586300, 24],
+    [0xc0a80000, 16],
+    [0xc6120000, 15],
+    [0xc6336400, 24],
+    [0xcb007100, 24],
+    [0xe0000000, 4],
+    [0xf0000000, 4],
+  ].some(([network, bits]) => value >>> (32 - bits) === network >>> (32 - bits));
 }
 
 function isPublicV6(address: string): boolean {
@@ -267,8 +283,7 @@ function isPublicV6(address: string): boolean {
     [0xff00n << 112n, 8],
   ];
   return !ranges.some(
-    ([network, bits]) =>
-      (value >> BigInt(128 - bits)) === (network >> BigInt(128 - bits)),
+    ([network, bits]) => value >> BigInt(128 - bits) === network >> BigInt(128 - bits),
   );
 }
 
@@ -281,11 +296,20 @@ function ipv6Value(address: string): bigint | null {
   if (ipv4?.includes('.')) {
     if (isIP(ipv4) !== 4) return null;
     const value = ipv4.split('.').map(Number);
-    rawParts.splice(-1, 1, ((value[0]! << 8) + value[1]!).toString(16), ((value[2]! << 8) + value[3]!).toString(16));
+    rawParts.splice(
+      -1,
+      1,
+      ((value[0]! << 8) + value[1]!).toString(16),
+      ((value[2]! << 8) + value[3]!).toString(16),
+    );
   }
   const leftCount = leftParts.length - (leftParts.at(-1)?.includes('.') ? 1 : 0);
   const rightCount = rawParts.length - leftCount;
-  const parts = [...rawParts.slice(0, leftCount), ...Array(8 - rawParts.length).fill('0'), ...rawParts.slice(leftCount, leftCount + rightCount)];
+  const parts = [
+    ...rawParts.slice(0, leftCount),
+    ...Array(8 - rawParts.length).fill('0'),
+    ...rawParts.slice(leftCount, leftCount + rightCount),
+  ];
   if (parts.length !== 8 || parts.some((part) => !/^[\da-f]{1,4}$/.test(part))) return null;
   return parts.reduce((value, part) => (value << 16n) + BigInt(`0x${part}`), 0n);
 }

@@ -1,9 +1,4 @@
-import type {
-  CoverLetterDocument,
-  GroundedText,
-  Profile,
-  ResumeDocument,
-} from './types';
+import type { CoverLetterDocument, GroundedText, Profile, ResumeDocument } from './types';
 
 function optionalString(value: unknown, label: string): string | undefined {
   if (value == null) return undefined;
@@ -13,11 +8,15 @@ function optionalString(value: unknown, label: string): string | undefined {
 
 function parseSourceIds(value: unknown, label: string): string[] {
   if (typeof value === 'string') {
-    return value.split(',').map((id) => id.trim()).filter(Boolean);
+    return value
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
   }
   if (!Array.isArray(value)) throw new Error(`Invalid ${label}.sourceIds`);
   return value.map((id, index) => {
-    if (typeof id !== 'string' || !id.trim()) throw new Error(`Invalid ${label}.sourceIds[${index}]`);
+    if (typeof id !== 'string' || !id.trim())
+      throw new Error(`Invalid ${label}.sourceIds[${index}]`);
     return id.trim();
   });
 }
@@ -33,7 +32,8 @@ function parseGroundedText(value: unknown, label: string): GroundedText {
 }
 
 function parseJsonObject(raw: unknown, label: string): Record<string, unknown> {
-  if (typeof raw !== 'string' || !raw.trim()) throw new Error(`Invalid ${label}: expected JSON string`);
+  if (typeof raw !== 'string' || !raw.trim())
+    throw new Error(`Invalid ${label}: expected JSON string`);
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
@@ -90,15 +90,7 @@ export const parseOutputSchema = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: [
-          'company',
-          'title',
-          'location',
-          'startDate',
-          'endDate',
-          'current',
-          'bullets',
-        ],
+        required: ['company', 'title', 'location', 'startDate', 'endDate', 'current', 'bullets'],
         properties: {
           company: { type: 'string' },
           title: { type: 'string' },
@@ -115,14 +107,7 @@ export const parseOutputSchema = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: [
-          'institution',
-          'qualification',
-          'field',
-          'startDate',
-          'endDate',
-          'details',
-        ],
+        required: ['institution', 'qualification', 'field', 'startDate', 'endDate', 'details'],
         properties: {
           institution: { type: 'string' },
           qualification: { type: 'string' },
@@ -232,7 +217,10 @@ export const TAILOR_JSON_SHAPE = [
   'Use "" for absent optional strings. sourceIds must be non-empty arrays of profile IDs only.',
 ].join(' ');
 
-export function assertObject(value: unknown, label: string): asserts value is Record<string, unknown> {
+export function assertObject(
+  value: unknown,
+  label: string,
+): asserts value is Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error(`Invalid ${label}: expected object`);
   }
@@ -334,8 +322,10 @@ export function assertTailorOutput(value: unknown): asserts value is {
   const coverRaw = parseJsonObject(value.coverLetterJson, 'tailor coverLetterJson');
 
   assertObject(resumeRaw.basics, 'tailor resume.basics');
-  if (typeof resumeRaw.basics.fullName !== 'string') throw new Error('Invalid tailor resume.basics.fullName');
-  if (typeof resumeRaw.basics.email !== 'string') throw new Error('Invalid tailor resume.basics.email');
+  if (typeof resumeRaw.basics.fullName !== 'string')
+    throw new Error('Invalid tailor resume.basics.fullName');
+  if (typeof resumeRaw.basics.email !== 'string')
+    throw new Error('Invalid tailor resume.basics.email');
   if (!Array.isArray(resumeRaw.basics.links)) throw new Error('Invalid tailor resume.basics.links');
 
   const resume: ResumeDocument = {
@@ -346,7 +336,11 @@ export function assertTailorOutput(value: unknown): asserts value is {
       location: optionalString(resumeRaw.basics.location, 'tailor resume.basics.location'),
       links: resumeRaw.basics.links.map((link, index) => {
         assertObject(link, `tailor resume.basics.links[${index}]`);
-        if (typeof link.id !== 'string' || typeof link.label !== 'string' || typeof link.url !== 'string') {
+        if (
+          typeof link.id !== 'string' ||
+          typeof link.label !== 'string' ||
+          typeof link.url !== 'string'
+        ) {
           throw new Error(`Invalid tailor resume.basics.links[${index}]`);
         }
         return { id: link.id, label: link.label, url: link.url };
@@ -365,7 +359,8 @@ export function assertTailorOutput(value: unknown): asserts value is {
   if (!Array.isArray(resumeRaw.roles)) throw new Error('Invalid tailor resume.roles');
   resume.roles = resumeRaw.roles.map((role, index) => {
     assertObject(role, `tailor resume.roles[${index}]`);
-    if (!Array.isArray(role.bullets)) throw new Error(`Invalid tailor resume.roles[${index}].bullets`);
+    if (!Array.isArray(role.bullets))
+      throw new Error(`Invalid tailor resume.roles[${index}].bullets`);
     return {
       sourceRoleId: String(role.sourceRoleId),
       company: String(role.company),
@@ -381,7 +376,8 @@ export function assertTailorOutput(value: unknown): asserts value is {
   if (!Array.isArray(resumeRaw.education)) throw new Error('Invalid tailor resume.education');
   resume.education = resumeRaw.education.map((item, index) => {
     assertObject(item, `tailor resume.education[${index}]`);
-    if (!Array.isArray(item.details)) throw new Error(`Invalid tailor resume.education[${index}].details`);
+    if (!Array.isArray(item.details))
+      throw new Error(`Invalid tailor resume.education[${index}].details`);
     return {
       sourceEducationId: String(item.sourceEducationId),
       institution: String(item.institution),
@@ -397,12 +393,16 @@ export function assertTailorOutput(value: unknown): asserts value is {
   if (!Array.isArray(resumeRaw.projects)) throw new Error('Invalid tailor resume.projects');
   resume.projects = resumeRaw.projects.map((project, index) => {
     assertObject(project, `tailor resume.projects[${index}]`);
-    if (!Array.isArray(project.bullets)) throw new Error(`Invalid tailor resume.projects[${index}].bullets`);
+    if (!Array.isArray(project.bullets))
+      throw new Error(`Invalid tailor resume.projects[${index}].bullets`);
     return {
       sourceProjectId: String(project.sourceProjectId),
       name: String(project.name),
       url: optionalString(project.url, `tailor resume.projects[${index}].url`),
-      description: parseGroundedText(project.description, `tailor resume.projects[${index}].description`),
+      description: parseGroundedText(
+        project.description,
+        `tailor resume.projects[${index}].description`,
+      ),
       bullets: project.bullets.map((bullet, bulletIndex) =>
         parseGroundedText(bullet, `tailor resume.projects[${index}].bullets[${bulletIndex}]`),
       ),
