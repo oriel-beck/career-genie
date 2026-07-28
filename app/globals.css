@@ -792,10 +792,12 @@ button:disabled {
 }
 
 .job-card-details {
-  min-width: 0;
+  display: contents;
 }
 
 .job-card-summary {
+  grid-column: 1;
+  grid-row: 1;
   display: grid;
   grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1fr) auto;
   gap: 0.35rem 1rem;
@@ -806,14 +808,12 @@ button:disabled {
 }
 
 .job-card-actions {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-}
-
-.job-card-details[open] ~ .job-card-actions {
-  align-self: start;
-  margin-top: 0.55rem;
+  align-self: center;
 }
 
 .job-card-actions .button-link,
@@ -852,6 +852,8 @@ button:disabled {
 }
 
 .job-card-body {
+  grid-column: 1 / -1;
+  grid-row: 2;
   display: grid;
   gap: 0.75rem;
   padding: 0 0 1rem 1rem;
@@ -874,7 +876,6 @@ button:disabled {
 
   .job-card-actions {
     align-self: center;
-    margin-top: 0;
   }
 }
 
