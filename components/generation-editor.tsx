@@ -65,12 +65,18 @@ export function GenerationEditor({ generation }: { generation: Generation }) {
       ) : null}
       <div className="preview-columns">
         <section className="card pdf-preview">
-          <h2>Resume preview</h2>
-          <PdfPreview title="Resume PDF preview" document={<ResumePdf document={resume} />} />
+          <PdfPreview
+            heading="Resume preview"
+            title="Resume PDF preview"
+            document={<ResumePdf document={resume} />}
+          />
         </section>
         <section className="card pdf-preview">
-          <h2>Cover letter preview</h2>
-          <PdfPreview title="Cover letter PDF preview" document={<CoverLetterPdf document={cover} />} />
+          <PdfPreview
+            heading="Cover letter preview"
+            title="Cover letter PDF preview"
+            document={<CoverLetterPdf document={cover} />}
+          />
         </section>
       </div>
     </section>
