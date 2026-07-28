@@ -179,7 +179,7 @@ export default function SettingsPage() {
         <p>Load the live model catalog. If your key is locked, you will be asked to unlock it.</p>
       )}
     </section>
-    <section className="card stack"><h2>Storage and folder</h2><p>Using {estimate?.usage ?? 0} of {estimate?.quota ?? 0} bytes.</p><button type="button" onClick={chooseFolder}>Choose download folder</button><p>{settings?.folderHandle ? `Selected folder: ${settings.folderHandle.name}` : 'No folder selected; files download normally.'}</p></section>
+    <section className="card stack"><h2>Storage and folder</h2><p>Using {estimate?.usage ?? 0} of {estimate?.quota ?? 0} bytes.</p><button type="button" onClick={chooseFolder}>Choose PDF folder</button><p>{settings?.folderHandle ? `Selected PDF folder: ${settings.folderHandle.name}` : 'No PDF folder selected. You can choose one when saving PDFs from a job.'}</p></section>
     <section className="card stack">
       <h2>Backup</h2>
       <button type="button" onClick={exportBackup}>Export backup</button>
