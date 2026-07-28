@@ -39,6 +39,32 @@ npm run check
 
 Deploy as a normal Next.js project on Vercel. Configure a fixed-window Vercel WAF rule for `POST /api/fetch-job`: 20 requests per IP per 10 minutes, returning 429 after the limit. Verify from one IP with 21 invalid-body POSTs: the first 20 should return 400 and the 21st 429 without running the function.
 
+## Desktop app (Windows and Linux)
+
+Tagged releases (`v*`) build self-contained desktop installers via [`.github/workflows/release.yml`](.github/workflows/release.yml) and attach them to the GitHub Release:
+
+| Platform | Artifact |
+|---|---|
+| Windows | `Career Genie-Setup-<version>.exe` |
+| Linux (amd64) | `career-genie_<version>_amd64.deb` |
+
+Each installer bundles embedded Chromium (Electron) and a local Next.js server. Launch **Career Genie** from the Start menu (Windows) or application menu (Linux). The app opens in its own window — no separate Chrome, Edge, or Firefox install required.
+
+The hosted web app still requires current desktop Chrome or Microsoft Edge.
+
+To cut a release:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+To run the desktop shell locally during development:
+
+```bash
+npm run desktop:dev
+```
+
 ## Vercel WAF rate limit
 
 In the Vercel Dashboard, open the production project, then **Firewall** → **Rate Limiting** → **Create rule**. Match method `POST` and path `/api/fetch-job`, use a fixed window keyed by client IP, set the threshold to **20 requests** and the window to **10 minutes**, and choose a `429` response. Publish the rule to production. The interactive `vercel firewall` command can create or inspect the same project firewall configuration; run `vercel firewall --help` first because its options are CLI-version specific.

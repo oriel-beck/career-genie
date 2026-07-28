@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
   // Hide the floating Next.js badge in dev (the cyan control on the left).
   devIndicators: false,

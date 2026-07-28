@@ -24,6 +24,9 @@ const allowedDevDependencies = new Set([
   '@types/node',
   '@types/react',
   '@types/react-dom',
+  'prettier',
+  'electron',
+  'electron-builder',
 ]);
 
 function files(directory: string): string[] {

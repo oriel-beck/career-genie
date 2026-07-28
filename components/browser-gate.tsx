@@ -19,6 +19,10 @@ const labels: Record<BrowserCapabilityValue, string> = {
   [BrowserCapability.CreateObjectURL]: 'Object URL support',
 };
 
+function isDesktopApp(): boolean {
+  return typeof navigator !== 'undefined' && /Electron/i.test(navigator.userAgent);
+}
+
 export function BrowserGate({ children }: { children: ReactNode }) {
   const [missing, setMissing] = useState<BrowserCapabilityValue[] | null>(null);
 
@@ -48,10 +52,11 @@ export function BrowserGate({ children }: { children: ReactNode }) {
     <main className="gate" aria-labelledby="unsupported-title">
       <h1 id="unsupported-title">This browser is not supported</h1>
       <p>
-        Career Genie requires a current desktop Chromium browser because your private data stays on
-        this device.
+        {isDesktopApp()
+          ? 'This desktop install is missing required browser capabilities. Try reinstalling from the latest GitHub Release.'
+          : 'Career Genie requires a current desktop Chromium browser because your private data stays on this device. You can also install the self-contained desktop app from GitHub Releases.'}
       </p>
-      <p>Use the latest desktop Chrome or Microsoft Edge, then try again.</p>
+      {!isDesktopApp() ? <p>Use the latest desktop Chrome or Microsoft Edge, then try again.</p> : null}
       <h2>Missing capabilities</h2>
       <ul>
         {missing.map((capability) => (

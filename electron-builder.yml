@@ -1,0 +1,32 @@
+appId: com.careergenie.app
+productName: Career Genie
+copyright: Copyright © Career Genie
+artifactName: ${productName}-Setup-${version}.${ext}
+directories:
+  output: dist/installers
+  buildResources: desktop
+files:
+  - desktop/main.mjs
+  - package.json
+extraResources:
+  - from: dist/career-genie/app
+    to: app
+    filter:
+      - '**/*'
+win:
+  target:
+    - nsis
+  icon: desktop/icon.png
+  signAndEditExecutable: false
+linux:
+  target:
+    - deb
+  category: Office
+  maintainer: Career Genie
+  icon: desktop/icon.png
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+deb:
+  packageName: career-genie

@@ -10,6 +10,8 @@ out/
 # production
 build/
 dist/
+desktop/icon.png
+dist/
 
 # misc
 .DS_Store

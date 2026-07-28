@@ -8,6 +8,8 @@ const eslintConfig = defineConfig([
   globalIgnores([
     '.next/**',
     'out/**',
+    'dist/**',
+    'desktop/**',
     'node_modules/**',
     'career-genie-vault/**',
     'coverage/**',
