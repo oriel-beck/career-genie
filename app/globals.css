@@ -885,6 +885,9 @@ button:disabled {
 .job-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'summary actions'
+    'body body';
   align-items: center;
   gap: 0.35rem 1rem;
   padding: 0 1rem 0 0;
@@ -895,8 +898,7 @@ button:disabled {
 }
 
 .job-card-summary {
-  grid-column: 1;
-  grid-row: 1;
+  grid-area: summary;
   display: grid;
   grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1fr) auto;
   gap: 0.35rem 1rem;
@@ -907,8 +909,7 @@ button:disabled {
 }
 
 .job-card-actions {
-  grid-column: 2;
-  grid-row: 1;
+  grid-area: actions;
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
@@ -945,11 +946,10 @@ button:disabled {
 }
 
 .job-card-body {
-  grid-column: 1 / -1;
-  grid-row: 2;
+  grid-area: body;
   display: grid;
   gap: 0.75rem;
-  padding: 0 0 1rem 1rem;
+  padding: 0 1rem 1rem 1rem;
   border-top: 1px solid var(--border);
 }
 
