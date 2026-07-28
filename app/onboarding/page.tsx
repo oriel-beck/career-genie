@@ -162,14 +162,13 @@ export default function OnboardingPage() {
         </section>
         {editing && <section className="card"><h2>Confirm your profile</h2><ProfileEditor profile={editing} onSave={saveProfile} submitLabel="Confirm and save profile" /></section>}
         {profile && (
-          <section className="card">
+          <section className="card stack">
             <Interview
               profile={profile}
               model={models.find((model) => model.id === settings?.models[CallKind.Interview])}
               onEdit={setEditing}
               onProfileSaved={setProfile}
             />
-            <Link className="button-link" href="/dashboard">Finish for now</Link>
           </section>
         )}
       </section>

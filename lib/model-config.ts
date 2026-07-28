@@ -11,7 +11,8 @@ export type ModelRequestConfig<S extends ObjectJsonSchema = ObjectJsonSchema> = 
 
 const DESIRED_MAX_TOKENS: Record<CallKind, number> = {
   [CallKind.Parse]: 4_096,
-  [CallKind.Interview]: 4_096,
+  // proposedProfileJson echoes the full profile; 4k truncates rich profiles mid-JSON.
+  [CallKind.Interview]: 16_384,
   [CallKind.Analyze]: 4_096,
   // Nested resumeJson/coverLetterJson strings are token-heavy; 8k truncates rich profiles.
   [CallKind.Tailor]: 16_384,

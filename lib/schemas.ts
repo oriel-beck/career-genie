@@ -161,9 +161,13 @@ export const parseOutputSchema = {
 export const interviewOutputSchema = {
   type: 'object' as const,
   additionalProperties: false as const,
-  required: ['reply', 'proposedProfileJson', 'changes', 'complete'] as const,
+  required: ['reply', 'questions', 'proposedProfileJson', 'changes', 'complete'] as const,
   properties: {
     reply: { type: 'string' as const },
+    questions: {
+      type: 'array' as const,
+      items: { type: 'string' as const },
+    },
     proposedProfileJson: { type: ['string', 'null'] as const },
     changes: {
       type: 'array' as const,
@@ -253,6 +257,7 @@ export function assertParseOutput(value: unknown): asserts value is Record<strin
 
 export function assertInterviewOutput(value: unknown): asserts value is {
   reply: string;
+  questions: string[];
   proposedProfile: Profile | null;
   changes: string[];
   complete: boolean;
@@ -260,6 +265,10 @@ export function assertInterviewOutput(value: unknown): asserts value is {
   assertObject(value, 'interview output');
   if (typeof value.reply !== 'string') throw new Error('Invalid interview output: reply');
   if (typeof value.complete !== 'boolean') throw new Error('Invalid interview output: complete');
+  if (!Array.isArray(value.questions)) throw new Error('Invalid interview output: questions');
+  value.questions.forEach((item, index) => {
+    if (typeof item !== 'string') throw new Error(`Invalid interview output: questions[${index}]`);
+  });
   if (!Array.isArray(value.changes)) throw new Error('Invalid interview output: changes');
   value.changes.forEach((item, index) => {
     if (typeof item !== 'string') throw new Error(`Invalid interview output: changes[${index}]`);

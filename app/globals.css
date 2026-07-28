@@ -708,11 +708,30 @@ button:disabled {
   margin: 0;
   padding: 0.65rem;
   border-left: 3px solid var(--border);
+}
+
+.turn-intro {
+  margin: 0;
   white-space: pre-wrap;
+}
+
+.interview-questions {
+  margin: 0.65rem 0 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.45rem;
 }
 
 .turn.assistant {
   border-color: var(--accent);
+}
+
+.turn.user {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.transcript-thinking {
+  margin: 0;
 }
 
 .danger {

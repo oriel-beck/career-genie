@@ -103,6 +103,16 @@ test('tailor requests up to 16k tokens when the model allows it', () => {
   assert.equal(config.effort, Effort.High);
 });
 
+test('interview requests up to 16k tokens when the model allows it', () => {
+  const config = buildModelRequestConfig(
+    CallKind.Interview,
+    model({ id: 'm5c', max_tokens: 32_000 }),
+    schema,
+  );
+  assert.equal(config.max_tokens, 16_384);
+  assert.equal(config.effort, Effort.Medium);
+});
+
 test('omits effort when capability is absent', () => {
   const withoutEffort: ModelInfo = {
     id: 'm6',

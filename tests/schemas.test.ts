@@ -22,6 +22,7 @@ test('interviewOutputSchema keeps proposed profile as a JSON string', () => {
     'changes',
     'complete',
     'proposedProfileJson',
+    'questions',
     'reply',
   ]);
   assert.deepEqual(interviewOutputSchema.properties.proposedProfileJson.type, ['string', 'null']);
@@ -30,7 +31,8 @@ test('interviewOutputSchema keeps proposed profile as a JSON string', () => {
 test('assertInterviewOutput parses proposedProfileJson', () => {
   const profile = { id: 1, basics: { fullName: 'Ada', email: 'ada@example.com', links: [] }, roles: [], education: [], projects: [], skills: [], certifications: [], languages: [], updatedAt: 1 };
   const raw: Record<string, unknown> = {
-    reply: 'What is your preferred title?',
+    reply: 'A few clarifying questions before I propose changes:',
+    questions: ['What is your preferred title?'],
     proposedProfileJson: JSON.stringify(profile),
     changes: ['Clarified headline'],
     complete: false,
@@ -45,7 +47,8 @@ test('assertInterviewOutput parses proposedProfileJson', () => {
 
 test('assertInterviewOutput accepts null proposedProfileJson', () => {
   const raw: Record<string, unknown> = {
-    reply: 'Tell me more about your role at MediMe.',
+    reply: 'Thanks for sharing your profile.',
+    questions: ['Tell me more about your role at MediMe.'],
     proposedProfileJson: null,
     changes: [],
     complete: false,

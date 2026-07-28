@@ -136,6 +136,8 @@ export interface ChatTurn {
   id: string;
   role: ChatRole;
   content: string;
+  /** Clarifying questions from the assistant, shown as a numbered list. */
+  questions?: string[];
   createdAt: number;
 }
 export interface InterviewState {
