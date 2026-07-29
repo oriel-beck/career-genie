@@ -11,6 +11,38 @@ let idleTimer: ReturnType<typeof setTimeout> | undefined;
 
 export const LOCKED_KEY_MESSAGE = 'API key is locked';
 
+export const KeyStatus = {
+  None: 'none',
+  Locked: 'locked',
+  Unlocked: 'unlocked',
+} as const;
+export type KeyStatus = (typeof KeyStatus)[keyof typeof KeyStatus];
+
+type KeyStatusListener = () => void;
+const keyStatusListeners = new Set<KeyStatusListener>();
+
+export function onKeyStatusChange(listener: KeyStatusListener): () => void {
+  keyStatusListeners.add(listener);
+  return () => keyStatusListeners.delete(listener);
+}
+
+function notifyKeyStatusChange(): void {
+  for (const listener of keyStatusListeners) listener();
+}
+
+export function currentKeyStatus(settings: Settings | undefined): KeyStatus {
+  if (stagedKey) return KeyStatus.Unlocked;
+  if (!settings?.keyHint) return KeyStatus.None;
+  if (settings.keyStorage === KeyStorageMode.Plaintext) {
+    return settings.plaintextKey ? KeyStatus.Unlocked : KeyStatus.Locked;
+  }
+  if (settings.keyStorage === KeyStorageMode.Session) {
+    return sessionKey ? KeyStatus.Unlocked : KeyStatus.Locked;
+  }
+  if (!settings.encryptedKey) return KeyStatus.None;
+  return wrappingKey ? KeyStatus.Unlocked : KeyStatus.Locked;
+}
+
 export class LockedKeyError extends Error {
   constructor() {
     super(LOCKED_KEY_MESSAGE);
@@ -56,6 +88,7 @@ async function currentSettings(): Promise<Settings> {
 export function stageKey(key: string): void {
   if (!key) throw new Error('API key is required');
   stagedKey = key;
+  notifyKeyStatusChange();
 }
 
 export async function commitStagedKey(
@@ -94,6 +127,7 @@ export async function commitStagedKey(
   stagedKey = undefined;
   lastCompletedUse = Date.now();
   armIdleLock();
+  notifyKeyStatusChange();
 }
 
 export async function unlock(passphrase: string): Promise<void> {
@@ -104,6 +138,7 @@ export async function unlock(passphrase: string): Promise<void> {
   wrappingKey = await unlockEncryptedKey(settings.encryptedKey, passphrase);
   lastCompletedUse = Date.now();
   armIdleLock();
+  notifyKeyStatusChange();
 }
 
 export async function withApiKey<T>(fn: (apiKey: string) => Promise<T> | T): Promise<T> {
@@ -138,6 +173,7 @@ export function lock(): void {
   lastCompletedUse = 0;
   if (idleTimer) clearTimeout(idleTimer);
   idleTimer = undefined;
+  notifyKeyStatusChange();
 }
 
 export function checkIdleLock(): void {
