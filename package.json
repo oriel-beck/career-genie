@@ -30,7 +30,7 @@
     "next": "^16.2.12",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "undici": "^7.29.0"
+    "undici": "^8.9.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.0",
