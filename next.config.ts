@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   experimental: {
-    // TypeScript 7 has no JS compiler API; run the native `tsc` CLI during builds.
+    // TS 6 still exposes the compiler API; keep CLI mode for faster native checks.
     useTypeScriptCli: true,
   },
   // Hide the floating Next.js badge in dev (the cyan control on the left).
