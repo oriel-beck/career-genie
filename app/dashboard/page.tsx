@@ -39,6 +39,7 @@ export default function DashboardPage() {
   const [url, setUrl] = useState('');
   const [paste, setPaste] = useState('');
   const [busy, setBusy] = useState<'fetch' | 'analyze' | null>(null);
+  const [focusPasteOnIdle, setFocusPasteOnIdle] = useState(false);
   const pasteRef = useRef<HTMLTextAreaElement>(null);
 
   async function refresh() {
@@ -50,6 +51,12 @@ export default function DashboardPage() {
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (busy || !focusPasteOnIdle) return;
+    pasteRef.current?.focus();
+    setFocusPasteOnIdle(false);
+  }, [busy, focusPasteOnIdle]);
 
   async function buildAnalyzedDraft(rawText: string, sourceUrl?: string) {
     const [profile, settings] = await Promise.all([db.profiles.get(1), db.settings.get(1)]);
@@ -114,7 +121,7 @@ export default function DashboardPage() {
       }
     } catch {
       toast('Could not import that URL. Paste the job text below instead.', 'error');
-      pasteRef.current?.focus();
+      setFocusPasteOnIdle(true);
     } finally {
       setBusy(null);
     }

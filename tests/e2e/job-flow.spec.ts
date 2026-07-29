@@ -49,7 +49,7 @@ const model = {
 const tailoring = {
   resume: {
     basics: profile.basics,
-    headline: null,
+    headline: { text: 'Platform Engineer', sourceIds: ['role-1'] },
     summary: {
       text: 'Platform engineer',
       sourceIds: ['role-1'],
@@ -134,6 +134,15 @@ async function seed(page: Page): Promise<void> {
   );
 }
 
+function tailorWirePayload() {
+  const { resume, coverLetter, changeSummary } = tailoring;
+  return {
+    resumeJson: JSON.stringify(resume),
+    coverLetterJson: JSON.stringify(coverLetter),
+    changeSummary,
+  };
+}
+
 async function mockAnthropic(page: Page): Promise<void> {
   await page.route('https://api.anthropic.com/**', async (route) => {
     if (route.request().url().includes('/v1/models')) {
@@ -142,6 +151,7 @@ async function mockAnthropic(page: Page): Promise<void> {
       });
       return;
     }
+    const wire = tailorWirePayload();
     await route.fulfill({
       json: {
         id: 'message-test',
@@ -149,8 +159,8 @@ async function mockAnthropic(page: Page): Promise<void> {
         role: 'assistant',
         model: model.id,
         stop_reason: 'end_turn',
-        content: [{ type: 'text', text: JSON.stringify(tailoring) }],
-        parsed_output: tailoring,
+        content: [{ type: 'text', text: JSON.stringify(wire) }],
+        parsed_output: wire,
         usage: { input_tokens: 1, output_tokens: 1 },
       },
     });
