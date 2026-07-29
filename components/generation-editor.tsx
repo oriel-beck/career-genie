@@ -1,8 +1,7 @@
 'use client';
 
 import { pdf } from '@react-pdf/renderer';
-import type { DocumentProps } from '@react-pdf/renderer';
-import { useState, type ReactElement } from 'react';
+import { useState } from 'react';
 import { CoverLetterPdf } from '@/components/cover-letter-pdf';
 import { useFeedback } from '@/components/feedback';
 import { PdfPreview } from '@/components/pdf-preview';
@@ -14,33 +13,12 @@ import type { Generation } from '@/lib/types';
 
 export function GenerationEditor({ generation }: { generation: Generation }) {
   const { toast } = useFeedback();
-  const [pdfBusy, setPdfBusy] = useState<'resume' | 'cover' | 'folder' | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const resume = generation.resume;
   const cover = generation.coverLetter;
 
-  async function download(
-    name: string,
-    content: ReactElement<DocumentProps>,
-    kind: 'resume' | 'cover',
-  ) {
-    setPdfBusy(kind);
-    try {
-      const blob = await pdf(content).toBlob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = name;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 0);
-    } catch (error) {
-      toast(error instanceof Error ? error.message : 'Could not generate PDF.', 'error');
-    } finally {
-      setPdfBusy(null);
-    }
-  }
-
   async function saveBothToFolder() {
-    setPdfBusy('folder');
+    setPdfBusy(true);
     try {
       const settings = (await db.settings.get(1)) ?? defaultSettings();
       let folderHandle = settings.folderHandle;
@@ -76,43 +54,15 @@ export function GenerationEditor({ generation }: { generation: Generation }) {
         );
       }
     } finally {
-      setPdfBusy(null);
+      setPdfBusy(false);
     }
   }
 
   return (
     <section className="stack generation-editor">
       <div className="button-row">
-        <button type="button" disabled={pdfBusy !== null} onClick={() => void saveBothToFolder()}>
-          {pdfBusy === 'folder' ? 'Saving PDFs…' : 'Save both PDFs to folder'}
-        </button>
-        <button
-          type="button"
-          className="secondary"
-          disabled={pdfBusy !== null}
-          onClick={() =>
-            void download(
-              `resume-v${generation.version}.pdf`,
-              <ResumePdf document={resume} />,
-              'resume',
-            )
-          }
-        >
-          {pdfBusy === 'resume' ? 'Preparing resume PDF…' : 'Download resume PDF'}
-        </button>
-        <button
-          type="button"
-          className="secondary"
-          disabled={pdfBusy !== null}
-          onClick={() =>
-            void download(
-              `cover-letter-v${generation.version}.pdf`,
-              <CoverLetterPdf document={cover} />,
-              'cover',
-            )
-          }
-        >
-          {pdfBusy === 'cover' ? 'Preparing cover letter PDF…' : 'Download cover letter PDF'}
+        <button type="button" disabled={pdfBusy} onClick={() => void saveBothToFolder()}>
+          {pdfBusy ? 'Saving PDFs…' : 'Save both PDFs to folder'}
         </button>
       </div>
       {pdfBusy ? (
@@ -120,13 +70,7 @@ export function GenerationEditor({ generation }: { generation: Generation }) {
           <span className="loader-spinner" aria-hidden="true" />
           <div className="loader-copy">
             <p className="loader-title">Generating PDF</p>
-            <p className="loader-hint">
-              {pdfBusy === 'folder'
-                ? 'Building both files and writing them to your selected folder.'
-                : pdfBusy === 'resume'
-                  ? 'Building your resume download.'
-                  : 'Building your cover letter download.'}
-            </p>
+            <p className="loader-hint">Building both files and writing them to your selected folder.</p>
           </div>
         </div>
       ) : null}
@@ -135,6 +79,7 @@ export function GenerationEditor({ generation }: { generation: Generation }) {
           <PdfPreview
             heading="Resume preview"
             title="Resume PDF preview"
+            downloadFilename={`resume-v${generation.version}.pdf`}
             document={<ResumePdf document={resume} />}
           />
         </section>
@@ -142,6 +87,7 @@ export function GenerationEditor({ generation }: { generation: Generation }) {
           <PdfPreview
             heading="Cover letter preview"
             title="Cover letter PDF preview"
+            downloadFilename={`cover-letter-v${generation.version}.pdf`}
             document={<CoverLetterPdf document={cover} />}
           />
         </section>

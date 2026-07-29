@@ -186,8 +186,8 @@ test('creates, filters, versions, and downloads a tailored job', async ({ page }
   await page.getByRole('button', { name: 'Regenerate' }).click();
   await expect(page.getByRole('button', { name: /v2 · ai/ })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Open in new tab' })).toHaveCount(2);
-  await page.getByRole('button', { name: 'Download resume PDF' }).click();
-  await expect(page.getByRole('button', { name: 'Download cover letter PDF' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Download PDF' })).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'Print PDF' })).toHaveCount(2);
 });
 
 test('shows a safe refusal state', async ({ page }) => {

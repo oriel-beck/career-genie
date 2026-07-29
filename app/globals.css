@@ -1073,21 +1073,40 @@ button:disabled {
   margin: 0;
 }
 
-.pdf-preview-open {
+.pdf-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+
+.pdf-preview-action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   width: 2rem;
   height: 2rem;
+  border: 0;
   border-radius: var(--radius);
+  padding: 0;
+  background: transparent;
   color: var(--accent);
   text-decoration: none;
+  font-weight: 400;
+  letter-spacing: normal;
+  cursor: pointer;
+  transform: none;
+  transition: color 160ms ease, background 160ms ease;
 }
 
-.pdf-preview-open:hover {
+.pdf-preview-action:hover {
   color: var(--accent-hover);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.pdf-preview-action:active {
+  transform: none;
 }
 
 .pdf-preview-frame {
