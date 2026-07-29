@@ -52,6 +52,12 @@ export default function DashboardPage() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    if (busy !== null || !focusPasteAfterLoadRef.current) return;
+    focusPasteAfterLoadRef.current = false;
+    pasteRef.current?.focus();
+  }, [busy]);
+
   async function buildAnalyzedDraft(rawText: string, sourceUrl?: string) {
     const [profile, settings] = await Promise.all([db.profiles.get(1), db.settings.get(1)]);
     if (!profile || !settings?.models.analyze) {
@@ -118,10 +124,6 @@ export default function DashboardPage() {
       focusPasteAfterLoadRef.current = true;
     } finally {
       setBusy(null);
-      if (focusPasteAfterLoadRef.current) {
-        focusPasteAfterLoadRef.current = false;
-        window.setTimeout(() => pasteRef.current?.focus(), 0);
-      }
     }
   }
 
