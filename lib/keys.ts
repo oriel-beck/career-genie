@@ -45,6 +45,10 @@ export function defaultSettings(): Settings {
   };
 }
 
+export function needsUnlockPassphrase(settings: Settings): boolean {
+  return settings.keyStorage === KeyStorageMode.Encrypted && Boolean(settings.encryptedKey);
+}
+
 async function currentSettings(): Promise<Settings> {
   return (await db.settings.get(1)) ?? defaultSettings();
 }

@@ -8,7 +8,13 @@ import { ModelPicker } from '@/components/model-picker';
 import { UnlockKeyForm } from '@/components/unlock-key-form';
 import { backupJson, importBackup } from '@/lib/backup';
 import { db } from '@/lib/db';
-import { commitStagedKey, defaultSettings, lock, stageKey } from '@/lib/keys';
+import {
+  commitStagedKey,
+  defaultSettings,
+  lock,
+  needsUnlockPassphrase,
+  stageKey,
+} from '@/lib/keys';
 import { defaultModelChoices } from '@/lib/model-config';
 import { listModels } from '@/lib/models';
 import { storageEstimate } from '@/lib/storage';
@@ -226,7 +232,7 @@ export default function SettingsPage() {
                   Lock key
                 </button>
               </div>
-              {settings.keyStorage === KeyStorageMode.Encrypted && settings.encryptedKey && (
+              {needsUnlockPassphrase(settings) && (
                 <UnlockKeyForm
                   id="unlock-passphrase"
                   onUnlocked={() => toast('Key unlocked.', 'success')}
