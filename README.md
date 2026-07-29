@@ -81,4 +81,4 @@ done
 
 Run the local executable checks with `npm run check`, and verify deployed CSP headers and per-request nonces with `npm run check:csp -- https://<deployment>`. The paid grounding release check requires a low-value compatible key: `ANTHROPIC_API_KEY=... ANTHROPIC_MODEL=... npm run eval:grounding`.
 
-`npm audit --omit=dev --audit-level=high` is also required in CI. At the current locked Next.js version, npm reports inherited high-severity `postcss` and `sharp` findings; its only offered remediation is a forced downgrade to Next 9, so it is not applied. Upgrade Next when a compatible patched release is available.
+`npm audit --omit=dev --audit-level=high` is also required in CI. Transitive `postcss` and `sharp` versions inherited from Next.js are pinned to patched releases via `package.json` overrides.

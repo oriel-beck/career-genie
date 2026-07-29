@@ -16,6 +16,7 @@ const allowedDependencies = new Set([
 ]);
 const allowedDevDependencies = new Set([
   'typescript',
+  '@typescript/native',
   'eslint',
   'eslint-config-next',
   'tsx',

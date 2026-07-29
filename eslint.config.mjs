@@ -18,6 +18,9 @@ const eslintConfig = defineConfig([
     'test-results/**',
   ]),
   {
+    settings: {
+      react: { version: '19' },
+    },
     rules: {
       'react/no-danger': 'error',
     },

@@ -3,6 +3,10 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  experimental: {
+    // TypeScript 7 has no JS compiler API; run the native `tsc` CLI during builds.
+    useTypeScriptCli: true,
+  },
   // Hide the floating Next.js badge in dev (the cyan control on the left).
   devIndicators: false,
   // Dev browser may hit 127.0.0.1 while `next dev` advertises localhost.
